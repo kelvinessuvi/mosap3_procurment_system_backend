@@ -1,0 +1,1154 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "MOSAP3 Procurement API",
+        "description": "Documentação oficial da API do Sistema de Procurement MOSAP3.\n * \n *      Roles:\n *      - **Admin**: Acesso total ao sistema.\n *      - **Procurement Technician**: Gestão de cotações e fornecedores.\n *      - **Public (Fornecedor)**: Acesso via token único enviado por email.",
+        "contact": {
+            "email": "admin@mosap3.ao"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8000",
+            "description": "Servidor da API"
+        }
+    ],
+    "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Autenticação de usuário",
+                "description": "Realiza login e retorna um token Sanctum.",
+                "operationId": "a3b306d14572d1f4bd6c064b3233e7b8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "admin@mosap3.ao"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login realizado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|AbCdEf123..."
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    },
+                    "403": {
+                        "description": "Conta inativa"
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Logout",
+                "description": "Revoga o token atual do usuário. Requer autenticação.",
+                "operationId": "fe8f3429cd6979b3b4517e186505f9f9",
+                "responses": {
+                    "200": {
+                        "description": "Logout realizado com sucesso"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/categories": {
+            "get": {
+                "tags": [
+                    "Categorias"
+                ],
+                "summary": "Listar categorias",
+                "operationId": "3f5817a34833d0a1f4af4548dd3aeaba",
+                "responses": {
+                    "200": {
+                        "description": "Lista de categorias",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Material de Escritório"
+                                            },
+                                            "slug": {
+                                                "type": "string",
+                                                "example": "material-de-escritorio"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Categorias"
+                ],
+                "summary": "Criar categoria (Admin)",
+                "operationId": "71fcad552bb0eaba9fb191fd8d8dcab0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Informática"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Equipamentos e acessórios de informática"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Categoria criada"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Estatísticas do Sistema",
+                "operationId": "f9ae6bf029fd5455620e57be01c3b831",
+                "responses": {
+                    "200": {
+                        "description": "Dados do dashboard",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "counts": {
+                                            "properties": {
+                                                "active_quotations": {
+                                                    "type": "integer"
+                                                },
+                                                "pending_reviews": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "recent_quotations": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/supplier-evaluations": {
+            "get": {
+                "tags": [
+                    "Avaliações de Fornecedores"
+                ],
+                "summary": "Listar Avaliações",
+                "operationId": "60a139fb0f888c47de8651c9397f2d86",
+                "parameters": [
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "overall_score",
+                                "success_rate"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de avaliações"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation/{token}": {
+            "get": {
+                "tags": [
+                    "Link Público (Email)"
+                ],
+                "summary": "Visualizar Pedido",
+                "description": "Permite ao fornecedor ver os detalhes do pedido usando o token do email.",
+                "operationId": "1a0be3ebc240642b2acd82cb6028cb10",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do pedido recuperados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "quotation_supplier": {
+                                            "type": "object"
+                                        },
+                                        "existing_response": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/quotation/{token}/submit": {
+            "post": {
+                "tags": [
+                    "Link Público (Email)"
+                ],
+                "summary": "Submeter Proposta",
+                "operationId": "9d8886b8ca6faaa8060e828035a1339c",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "delivery_date",
+                                    "delivery_days",
+                                    "payment_terms",
+                                    "items"
+                                ],
+                                "properties": {
+                                    "delivery_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-02-15"
+                                    },
+                                    "delivery_days": {
+                                        "type": "integer",
+                                        "example": 15
+                                    },
+                                    "payment_terms": {
+                                        "type": "string",
+                                        "example": "50% na encomenda, 50% na entrega"
+                                    },
+                                    "observations": {
+                                        "type": "string",
+                                        "example": "Frete incluso"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "quotation_item_id",
+                                                "unit_price"
+                                            ],
+                                            "properties": {
+                                                "quotation_item_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "unit_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4500
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "Modelo similar ao solicitado"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Proposta enviada com sucesso"
+                    }
+                }
+            }
+        },
+        "/api/quotation/{token}/decline": {
+            "post": {
+                "tags": [
+                    "Link Público (Email)"
+                ],
+                "summary": "Declinar Participação",
+                "operationId": "434a134e7c017ff6e272ee1b561b2db0",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Participação apenas declinada"
+                    }
+                }
+            }
+        },
+        "/api/quotation-requests": {
+            "get": {
+                "tags": [
+                    "Cotações (Requests)"
+                ],
+                "summary": "Listar pedidos de cotação",
+                "operationId": "63bc7da0c32e3fdb013c08a388781067",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "draft",
+                                "sent",
+                                "in_progress",
+                                "completed",
+                                "cancelled"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de pedidos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Cotações (Requests)"
+                ],
+                "summary": "Criar novo pedido de cotação",
+                "operationId": "48926bbe3d0e3fa3185d75bb1e414711",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "deadline",
+                                    "items",
+                                    "suppliers"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Aquisição de Mobiliário"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Mobiliário para novo escritório"
+                                    },
+                                    "deadline": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-02-01 17:00:00"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "name",
+                                                "quantity",
+                                                "unit"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Cadeira Giratória"
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "unit": {
+                                                    "type": "string",
+                                                    "example": "un"
+                                                },
+                                                "specifications": {
+                                                    "type": "string",
+                                                    "example": "Cor preta, ergonômica"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "suppliers": {
+                                        "description": "IDs dos fornecedores convidados",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Criado com sucesso"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-requests/{id}/send": {
+            "post": {
+                "tags": [
+                    "Cotações (Requests)"
+                ],
+                "summary": "Enviar convites aos fornecedores",
+                "description": "Dispara e-mails para todos os fornecedores convidados com status 'pending'.",
+                "operationId": "a45faecab0c42c5e1d81f4e908654362",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Convites enviados"
+                    },
+                    "400": {
+                        "description": "Erro (apenas rascunhos podem ser enviados)"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-requests/{id}/cancel": {
+            "post": {
+                "tags": [
+                    "Cotações (Requests)"
+                ],
+                "summary": "Cancelar pedido de cotação",
+                "operationId": "fdf8bd5d50743d10bc49154a3ca569c0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cancelado com sucesso"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-responses/{id}/approve": {
+            "post": {
+                "tags": [
+                    "Negociação & Revisão"
+                ],
+                "summary": "Aprovar Proposta",
+                "operationId": "86323686c1b5c849254eda155910ffc9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Aprovado, excelente preço"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Aprovado com sucesso"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-responses/{id}/reject": {
+            "post": {
+                "tags": [
+                    "Negociação & Revisão"
+                ],
+                "summary": "Rejeitar Proposta",
+                "operationId": "ebe781e4641956910b7e927f9c50298f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Preço muito alto"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rejeitado com sucesso"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-responses/{id}/request-revision": {
+            "post": {
+                "tags": [
+                    "Negociação & Revisão"
+                ],
+                "summary": "Solicitar Revisão",
+                "description": "Solicita ao fornecedor uma revisão da proposta (Gera novo token).",
+                "operationId": "a1627525d8f074534ba60b020c81b143",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reason",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Preço"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "example": "Por favor, reveja o preço unitário do item 2."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Solicitação enviada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-responses/{id}/create-acquisition": {
+            "post": {
+                "tags": [
+                    "Negociação & Revisão"
+                ],
+                "summary": "Gerar Aquisição",
+                "description": "Gera uma aquisição a partir de uma proposta aprovada.",
+                "operationId": "82423805408d6510cec79d20b328ad24",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "expected_delivery_date"
+                                ],
+                                "properties": {
+                                    "expected_delivery_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-01"
+                                    },
+                                    "justification": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Aquisição criada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers": {
+            "get": {
+                "tags": [
+                    "Fornecedores"
+                ],
+                "summary": "Listar fornecedores",
+                "description": "Retorna uma lista paginada de fornecedores com filtros opcionais.",
+                "operationId": "43efd859bdde27a9e53c0afbe0891731",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Busca por nome ou NIF",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "activity_type",
+                        "in": "query",
+                        "description": "Filtro por tipo de atividade",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista recuperada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "commercial_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "nif": {
+                                                        "type": "string"
+                                                    },
+                                                    "email": {
+                                                        "type": "string"
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Fornecedores"
+                ],
+                "summary": "Criar novo fornecedor",
+                "operationId": "c1ee06af9e1f197a4aa49c1dd74c981c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "legal_name",
+                                    "commercial_name",
+                                    "email",
+                                    "phone",
+                                    "nif",
+                                    "activity_type",
+                                    "province",
+                                    "municipality",
+                                    "address"
+                                ],
+                                "properties": {
+                                    "legal_name": {
+                                        "type": "string",
+                                        "example": "Empresa Exemplo SA"
+                                    },
+                                    "commercial_name": {
+                                        "type": "string",
+                                        "example": "Exemplo Comercial"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contato@exemplo.ao"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+244923456789"
+                                    },
+                                    "nif": {
+                                        "type": "string",
+                                        "example": "5001234567"
+                                    },
+                                    "activity_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Serviços",
+                                            "Comércio Geral",
+                                            "Tecnologia",
+                                            "Construção",
+                                            "Consultoria",
+                                            "Transporte",
+                                            "Saúde",
+                                            "Outros"
+                                        ]
+                                    },
+                                    "province": {
+                                        "type": "string",
+                                        "example": "Luanda"
+                                    },
+                                    "municipality": {
+                                        "type": "string",
+                                        "example": "Belas"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Rua das Acácias, 12"
+                                    },
+                                    "commercial_certificate": {
+                                        "description": "Certificado Comercial (PDF/IMG)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "commercial_license": {
+                                        "description": "Alvará (PDF/IMG)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "nif_proof": {
+                                        "description": "Comprovativo NIF (PDF/IMG)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "categories": {
+                                        "description": "IDs das categorias",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Fornecedor criado com sucesso"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Usuários"
+                ],
+                "summary": "Listar usuários",
+                "operationId": "c457726701591d1183b53aa71fc13441",
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuários",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Não autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Usuários"
+                ],
+                "summary": "Criar novo usuário (Admin/Técnico)",
+                "operationId": "592819a0265360b2014512d6dbfaf0e7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "João Silva"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "joao.silva@mosap3.ao"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "procurement_technician"
+                                        ],
+                                        "example": "procurement_technician"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuário criado"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Categorias",
+            "description": "Gestão de Categorias de Produtos/Serviços"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Estatísticas e Visão Geral"
+        },
+        {
+            "name": "Avaliações de Fornecedores",
+            "description": "Métricas de Desempenho Automatizadas"
+        },
+        {
+            "name": "Link Público (Email)",
+            "description": "Endpoints acessíveis via link enviado por email (Token)"
+        },
+        {
+            "name": "Cotações (Requests)",
+            "description": "Gestão de Pedidos de Cotação"
+        },
+        {
+            "name": "Negociação & Revisão",
+            "description": "Gestão de Respostas e Negociações"
+        },
+        {
+            "name": "Usuários",
+            "description": "Gestão de usuários (Admin apenas)"
+        },
+        {
+            "name": "Autenticação",
+            "description": "Autenticação"
+        },
+        {
+            "name": "Fornecedores",
+            "description": "Fornecedores"
+        }
+    ]
+}

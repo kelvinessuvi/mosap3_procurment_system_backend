@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('quotation_items', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('quotation_request_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->enum('role', ['admin', 'procurement_technician'])->default('procurement_technician');
-            $table->boolean('is_active')->default(true);
-            $table->rememberToken();
+            $table->text('description')->nullable();
+            $table->integer('quantity');
+            $table->string('unit');
+            $table->text('specifications')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('quotation_items');
     }
 };
