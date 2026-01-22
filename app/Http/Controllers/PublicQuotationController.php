@@ -121,6 +121,14 @@ class PublicQuotationController extends Controller
              }
         }
 
+        // Normalize inputs (Support camelCase from JS frontends)
+        $input = $request->all();
+        if (isset($input['deliveryDate'])) $input['delivery_date'] = $input['deliveryDate'];
+        if (isset($input['deliveryDays'])) $input['delivery_days'] = $input['deliveryDays'];
+        if (isset($input['paymentTerms'])) $input['payment_terms'] = $input['paymentTerms'];
+
+        $request->merge($input);
+
         $validated = $request->validate([
             'observations' => 'nullable|string',
             'delivery_date' => 'required|date|after:now',

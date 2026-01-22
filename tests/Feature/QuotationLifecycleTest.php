@@ -74,9 +74,9 @@ class QuotationLifecycleTest extends TestCase
         $quotationItem = $quotation->items->first();
         
         $proposalData = [
-            'delivery_date' => now()->addDays(5)->toIso8601String(),
-            'delivery_days' => 5,
-            'payment_terms' => '50% upfront',
+            'deliveryDate' => now()->addDays(5)->toIso8601String(),
+            'deliveryDays' => 5,
+            'paymentTerms' => '50% upfront',
             'items' => [
                 [
                     'quotation_item_id' => $quotationItem->id,
