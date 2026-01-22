@@ -102,6 +102,21 @@
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Enviar Proposta</h3>
                 
                 <form id="proposal-form" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Data de Entrega</label>
+                            <input type="date" name="delivery_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Dias para Entrega</label>
+                            <input type="number" name="delivery_days" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Termos de Pagamento</label>
+                            <input type="text" name="payment_terms" required placeholder="Ex: 50% Adjudicação, 50% Entrega" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 gap-4">
                          @foreach($quotation->items as $index => $item)
                         <div class="border p-4 rounded bg-gray-50">
