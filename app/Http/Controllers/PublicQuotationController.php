@@ -6,6 +6,7 @@ use App\Models\QuotationResponse;
 use App\Models\QuotationSupplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -120,6 +121,8 @@ class PublicQuotationController extends Controller
                  return response()->json(['message' => 'Proposta já submetida.'], 403);
              }
         }
+
+        Log::info('Quotation Submit Input (Raw):', $request->all());
 
         // Normalize inputs (Support camelCase from JS frontends)
         $input = $request->all();
