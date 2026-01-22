@@ -108,8 +108,9 @@ class QuotationLifecycleTest extends TestCase
         $this->assertEquals('declined', $pivot2->status);
 
         // 6. Admin Reviews Responses
-        $responses = $this->actingAs($admin, 'sanctum')->getJson('/api/quotation-responses');
-        $responses->assertStatus(200);
+        $responses = $this->actingAs($admin, 'sanctum')->getJson('/api/quotation-responses?quotation_request_id=' . $quotationId);
+        $responses->assertStatus(200)
+                  ->assertJsonCount(1, 'data'); // We have 1 submitted response
         
         $submittedResponseId = $submitResponse->json('id');
         

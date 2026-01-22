@@ -21,6 +21,49 @@ use Illuminate\Support\Str;
 class QuotationResponseController extends Controller
 {
     /**
+     * @OA\Get(
+     *     path="/api/quotation-responses",
+     *     summary="Listar Respostas",
+     *     tags={"Negociação & Revisão"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="status", in="query", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="quotation_request_id", in="query", @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Lista de respostas")
+     * )
+     */
+    public function index(Request $request)
+    {
+        $query = QuotationResponse::with(['quotationSupplier.supplier', 'quotationSupplier.quotationRequest']);
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('quotation_request_id')) {
+            $query->whereHas('quotationSupplier', function($q) use ($request) {
+                $q->where('quotation_request_id', $request->quotation_request_id);
+            });
+        }
+
+        return response()->json($query->paginate(15));
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/quotation-responses/{id}",
+     *     summary="Detalhes da Resposta",
+     *     tags={"Negociação & Revisão"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Detalhes")
+     * )
+     */
+    public function show(QuotationResponse $quotationResponse)
+    {
+        return response()->json($quotationResponse->load(['items', 'history', 'quotationSupplier.supplier']));
+    }
+
+    /**
      * @OA\Post(
      *     path="/api/quotation-responses/{id}/approve",
      *     summary="Aprovar Proposta",
