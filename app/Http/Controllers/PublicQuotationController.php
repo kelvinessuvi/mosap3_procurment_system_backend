@@ -232,6 +232,9 @@ class PublicQuotationController extends Controller
                 'action_notes' => 'Proposta submetida pelo fornecedor',
             ]);
 
+            // Update supplier evaluation metrics
+            $this->updateSupplierEvaluation($qs->supplier_id);
+
             return response()->json($response->load('items'), 201);
         });
     }
@@ -250,5 +253,56 @@ class PublicQuotationController extends Controller
         $qs = QuotationSupplier::where('token', $token)->firstOrFail();
         $qs->update(['status' => 'declined']);
         return response()->json(['message' => 'Participação declinada.']);
+    }
+
+    private function updateSupplierEvaluation($supplierId) 
+    {
+        // Calculate metrics
+        $totalQuotations = QuotationSupplier::where('supplier_id', $supplierId)->count();
+        
+        $totalSubmittedInvites = QuotationSupplier::where('supplier_id', $supplierId)
+            ->where('status', 'submitted')
+            ->count();
+        
+        $totalApproved = QuotationResponse::whereHas('quotationSupplier', function($q) use ($supplierId) {
+            $q->where('supplier_id', $supplierId);
+        })->where('status', 'approved')->count();
+        
+        $totalRejected = QuotationResponse::whereHas('quotationSupplier', function($q) use ($supplierId) {
+            $q->where('supplier_id', $supplierId);
+        })->where('status', 'rejected')->count();
+
+        $totalAcquisitions = \App\Models\Acquisition::where('supplier_id', $supplierId)->count();
+
+        // Calculate rates
+        $responseRate = $totalQuotations > 0 ? ($totalSubmittedInvites / $totalQuotations) * 100 : 0;
+        $successRate = $totalSubmittedInvites > 0 ? ($totalApproved / $totalSubmittedInvites) * 100 : 0;
+        $acquisitionRate = $totalQuotations > 0 ? ($totalAcquisitions / $totalQuotations) * 100 : 0;
+
+        $totalRevisions = QuotationResponse::whereHas('quotationSupplier', function($q) use ($supplierId) {
+            $q->where('supplier_id', $supplierId);
+        })->where('status', 'needs_revision')->count();
+
+        // Calculate overall score
+        $score = ($successRate * 0.4) + ($responseRate * 0.3) + (min($acquisitionRate * 2, 100) * 0.3);
+        $score = min($score, 100);
+
+        // Update or create evaluation
+        \App\Models\SupplierEvaluation::updateOrCreate(
+            ['supplier_id' => $supplierId],
+            [
+                'total_quotations' => $totalQuotations,
+                'total_responses' => $totalSubmittedInvites,
+                'total_approved' => $totalApproved,
+                'total_rejected' => $totalRejected,
+                'total_acquisitions' => $totalAcquisitions,
+                'response_rate' => $responseRate,
+                'success_rate' => $successRate,
+                'acquisition_rate' => $acquisitionRate,
+                'avg_response_time_hours' => 0,
+                'total_revisions_requested' => $totalRevisions,
+                'overall_score' => $score
+            ]
+        );
     }
 }

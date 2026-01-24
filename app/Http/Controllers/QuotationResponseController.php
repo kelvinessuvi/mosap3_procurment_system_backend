@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\NegotiationNotificationMail;
+use App\Mail\ProposalApprovedMail;
+use App\Mail\ProposalRejectedMail;
 use App\Models\Acquisition;
 use App\Models\NegotiationNotification;
 use App\Models\QuotationResponse;
@@ -91,6 +93,11 @@ class QuotationResponseController extends Controller
 
         $this->updateSupplierStatistics($quotationResponse->quotationSupplier->supplier_id);
 
+        // Send email to supplier
+        $quotationResponse->load('quotationSupplier.supplier', 'quotationSupplier.quotationRequest');
+        Mail::to($quotationResponse->quotationSupplier->supplier->email)
+            ->send(new ProposalApprovedMail($quotationResponse));
+
         return response()->json($quotationResponse);
     }
 
@@ -120,6 +127,11 @@ class QuotationResponseController extends Controller
         ]);
 
         $this->updateSupplierStatistics($quotationResponse->quotationSupplier->supplier_id);
+
+        // Send email to supplier
+        $quotationResponse->load('quotationSupplier.supplier', 'quotationSupplier.quotationRequest');
+        Mail::to($quotationResponse->quotationSupplier->supplier->email)
+            ->send(new ProposalRejectedMail($quotationResponse));
 
         return response()->json($quotationResponse);
     }
@@ -253,15 +265,54 @@ class QuotationResponseController extends Controller
         });
     }
 
-    private function updateSupplierStatistics($supplierId) {
-        // Simple trigger to recalculate or increment
-        // For now, placeholder or basic increment
-        // Ideally should be a separate Service or Event
+    private function updateSupplierStatistics($supplierId) 
+    {
+        // Calculate metrics
+        $totalQuotations = QuotationSupplier::where('supplier_id', $supplierId)->count();
         
-        $eval = SupplierEvaluation::firstOrCreate(['supplier_id' => $supplierId]);
+        $totalSubmittedInvites = QuotationSupplier::where('supplier_id', $supplierId)
+            ->where('status', 'submitted')
+            ->count();
         
-        // Recalculate basic counts
-        // This is expensive if done realtime, usually done via Job.
-        // I'll leave as placeholder to be implemented in "Automated Evaluations" section if needed.
+        $totalApproved = QuotationResponse::whereHas('quotationSupplier', function($q) use ($supplierId) {
+            $q->where('supplier_id', $supplierId);
+        })->where('status', 'approved')->count();
+        
+        $totalRejected = QuotationResponse::whereHas('quotationSupplier', function($q) use ($supplierId) {
+            $q->where('supplier_id', $supplierId);
+        })->where('status', 'rejected')->count();
+
+        $totalAcquisitions = Acquisition::where('supplier_id', $supplierId)->count();
+
+        // Calculate rates
+        $responseRate = $totalQuotations > 0 ? ($totalSubmittedInvites / $totalQuotations) * 100 : 0;
+        $successRate = $totalSubmittedInvites > 0 ? ($totalApproved / $totalSubmittedInvites) * 100 : 0;
+        $acquisitionRate = $totalQuotations > 0 ? ($totalAcquisitions / $totalQuotations) * 100 : 0;
+
+        $totalRevisions = QuotationResponse::whereHas('quotationSupplier', function($q) use ($supplierId) {
+            $q->where('supplier_id', $supplierId);
+        })->where('status', 'needs_revision')->count();
+
+        // Calculate overall score (40% success + 30% response + 30% acquisition)
+        $score = ($successRate * 0.4) + ($responseRate * 0.3) + (min($acquisitionRate * 2, 100) * 0.3);
+        $score = min($score, 100);
+
+        // Update or create evaluation
+        SupplierEvaluation::updateOrCreate(
+            ['supplier_id' => $supplierId],
+            [
+                'total_quotations' => $totalQuotations,
+                'total_responses' => $totalSubmittedInvites,
+                'total_approved' => $totalApproved,
+                'total_rejected' => $totalRejected,
+                'total_acquisitions' => $totalAcquisitions,
+                'response_rate' => $responseRate,
+                'success_rate' => $successRate,
+                'acquisition_rate' => $acquisitionRate,
+                'avg_response_time_hours' => 0, // Placeholder for now
+                'total_revisions_requested' => $totalRevisions,
+                'overall_score' => $score
+            ]
+        );
     }
 }
