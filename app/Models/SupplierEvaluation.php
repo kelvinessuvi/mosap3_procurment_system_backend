@@ -15,4 +15,9 @@ class SupplierEvaluation extends Model
         'response_rate', 'success_rate', 'acquisition_rate',
         'avg_response_time_hours', 'total_revisions_requested', 'overall_score'
     ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 }
