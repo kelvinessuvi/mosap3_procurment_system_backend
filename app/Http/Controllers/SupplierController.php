@@ -139,13 +139,13 @@ class SupplierController extends Controller
         $uploadPath = 'suppliers/documents';
         
         if ($request->hasFile('commercial_certificate')) {
-            $validated['commercial_certificate'] = $request->file('commercial_certificate')->store($uploadPath);
+            $validated['commercial_certificate'] = $request->file('commercial_certificate')->store($uploadPath, 'public');
         }
         if ($request->hasFile('commercial_license')) {
-            $validated['commercial_license'] = $request->file('commercial_license')->store($uploadPath);
+            $validated['commercial_license'] = $request->file('commercial_license')->store($uploadPath, 'public');
         }
         if ($request->hasFile('nif_proof')) {
-            $validated['nif_proof'] = $request->file('nif_proof')->store($uploadPath);
+            $validated['nif_proof'] = $request->file('nif_proof')->store($uploadPath, 'public');
         }
 
         // Map activity_type to DB enum
@@ -266,9 +266,9 @@ class SupplierController extends Controller
             if ($request->hasFile($fileKey)) {
                 // Delete old file
                 if ($supplier->$fileKey) {
-                    Storage::delete($supplier->$fileKey);
+                    Storage::disk('public')->delete($supplier->$fileKey);
                 }
-                $validated[$fileKey] = $request->file($fileKey)->store($uploadPath);
+                $validated[$fileKey] = $request->file($fileKey)->store($uploadPath, 'public');
             }
         }
 

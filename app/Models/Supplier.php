@@ -18,6 +18,33 @@ class Supplier extends Model
         'is_active', 'user_id'
     ];
 
+    protected $appends = [
+        'commercial_certificate_url',
+        'commercial_license_url',
+        'nif_proof_url'
+    ];
+
+    public function getCommercialCertificateUrlAttribute()
+    {
+        return $this->commercial_certificate 
+            ? url('storage/' . $this->commercial_certificate) 
+            : null;
+    }
+
+    public function getCommercialLicenseUrlAttribute()
+    {
+        return $this->commercial_license 
+            ? url('storage/' . $this->commercial_license) 
+            : null;
+    }
+
+    public function getNifProofUrlAttribute()
+    {
+        return $this->nif_proof 
+            ? url('storage/' . $this->nif_proof) 
+            : null;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
