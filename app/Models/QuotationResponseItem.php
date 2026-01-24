@@ -13,4 +13,9 @@ class QuotationResponseItem extends Model
         'quotation_response_id', 'quotation_item_id',
         'unit_price', 'total_price', 'notes'
     ];
+
+    public function quotationItem()
+    {
+        return $this->belongsTo(QuotationItem::class);
+    }
 }

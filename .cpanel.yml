@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/USER/public_html/api/
+    - /bin/cp -R * $DEPLOYPATH
+    - /bin/cp -R .env.example $DEPLOYPATH
+    - /bin/cp -R storage $DEPLOYPATH

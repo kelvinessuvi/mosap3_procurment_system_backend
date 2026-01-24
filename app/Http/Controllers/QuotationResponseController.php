@@ -60,7 +60,7 @@ class QuotationResponseController extends Controller
      */
     public function show(QuotationResponse $quotationResponse)
     {
-        return response()->json($quotationResponse->load(['items', 'history', 'quotationSupplier.supplier']));
+        return response()->json($quotationResponse->load(['items.quotationItem', 'history', 'quotationSupplier.supplier']));
     }
 
     /**

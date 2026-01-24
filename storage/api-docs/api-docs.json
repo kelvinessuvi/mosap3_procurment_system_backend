@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost",
+            "url": "http://localhost:8000",
             "description": "Servidor da API"
         }
     ],
@@ -420,7 +420,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "delivery_date",
@@ -470,6 +470,11 @@
                                             },
                                             "type": "object"
                                         }
+                                    },
+                                    "proposal_file": {
+                                        "description": "Documento da proposta (PDF, DOC, DOCX - max 10MB)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"

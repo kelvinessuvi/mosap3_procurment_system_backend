@@ -12,13 +12,24 @@ class QuotationResponse extends Model
     protected $fillable = [
         'quotation_supplier_id', 'user_id', 'observations',
         'delivery_date', 'delivery_days', 'payment_terms',
-        'submitted_at', 'status', 'review_notes', 'revision_number'
+        'submitted_at', 'status', 'review_notes', 'revision_number',
+        'proposal_document', 'proposal_document_original_name'
     ];
 
     protected $casts = [
         'delivery_date' => 'date',
         'submitted_at' => 'datetime',
     ];
+
+    protected $appends = ['proposal_document_url'];
+
+    public function getProposalDocumentUrlAttribute()
+    {
+        if (!$this->proposal_document) {
+            return null;
+        }
+        return url('storage/' . $this->proposal_document);
+    }
 
     public function quotationSupplier()
     {

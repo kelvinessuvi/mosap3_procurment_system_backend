@@ -90,18 +90,31 @@ class PublicQuotationController extends Controller
      *     @OA\Parameter(name="token", in="path", required=true, @OA\Schema(type="string")),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"delivery_date", "delivery_days", "payment_terms", "items"},
-     *             @OA\Property(property="delivery_date", type="string", format="date", example="2026-02-15"),
-     *             @OA\Property(property="delivery_days", type="integer", example=15),
-     *             @OA\Property(property="payment_terms", type="string", example="50% na encomenda, 50% na entrega"),
-     *             @OA\Property(property="observations", type="string", example="Frete incluso"),
-     *             @OA\Property(property="items", type="array", @OA\Items(
-     *                 required={"quotation_item_id", "unit_price"},
-     *                 @OA\Property(property="quotation_item_id", type="integer", example=1),
-     *                 @OA\Property(property="unit_price", type="number", format="float", example=4500.00),
-     *                 @OA\Property(property="notes", type="string", example="Modelo similar ao solicitado")
-     *             ))
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"delivery_date", "delivery_days", "payment_terms", "items"},
+     *                 @OA\Property(property="delivery_date", type="string", format="date", example="2026-02-15"),
+     *                 @OA\Property(property="delivery_days", type="integer", example=15),
+     *                 @OA\Property(property="payment_terms", type="string", example="50% na encomenda, 50% na entrega"),
+     *                 @OA\Property(property="observations", type="string", example="Frete incluso"),
+     *                 @OA\Property(
+     *                     property="items",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         required={"quotation_item_id", "unit_price"},
+     *                         @OA\Property(property="quotation_item_id", type="integer", example=1),
+     *                         @OA\Property(property="unit_price", type="number", format="float", example=4500.00),
+     *                         @OA\Property(property="notes", type="string", example="Modelo similar ao solicitado")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="proposal_file",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Documento da proposta (PDF, DOC, DOCX - max 10MB)"
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(response=201, description="Proposta enviada com sucesso")
@@ -141,9 +154,10 @@ class PublicQuotationController extends Controller
             'items.*.quotation_item_id' => 'required|exists:quotation_items,id',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.notes' => 'nullable|string',
+            'proposal_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 
-        return DB::transaction(function () use ($validated, $qs) {
+        return DB::transaction(function () use ($validated, $qs, $request) {
             
             // Determine revision number
             $lastResponse = QuotationResponse::where('quotation_supplier_id', $qs->id)->latest()->first();
@@ -155,6 +169,15 @@ class PublicQuotationController extends Controller
             // If token belongs to SAME QuotationSupplier, then we probably create a NEW Response linked to SAME SupplierInvite.
             // Let's create a NEW Response.
 
+            // Handle file upload
+            $proposalDocument = null;
+            $proposalDocumentOriginalName = null;
+            if ($request->hasFile('proposal_file')) {
+                $file = $request->file('proposal_file');
+                $proposalDocumentOriginalName = $file->getClientOriginalName();
+                $proposalDocument = $file->store('proposals', 'public');
+            }
+
             $response = QuotationResponse::create([
                 'quotation_supplier_id' => $qs->id,
                 'user_id' => null, // Supplier submitted
@@ -165,13 +188,19 @@ class PublicQuotationController extends Controller
                 'submitted_at' => now(),
                 'status' => 'pending_review',
                 'revision_number' => $revisionNumber,
+                'proposal_document' => $proposalDocument,
+                'proposal_document_original_name' => $proposalDocumentOriginalName,
             ]);
 
             foreach ($validated['items'] as $item) {
+                // Get the quotation item to access quantity
+                $quotationItem = \App\Models\QuotationItem::find($item['quotation_item_id']);
+                $totalPrice = $item['unit_price'] * $quotationItem->quantity;
+                
                 $response->items()->create([
                     'quotation_item_id' => $item['quotation_item_id'],
                     'unit_price' => $item['unit_price'],
-                    // calculate total if needed, or store virtual. We defined virtual/nullable.
+                    'total_price' => $totalPrice,
                     'notes' => $item['notes'] ?? null,
                 ]);
             }

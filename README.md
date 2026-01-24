@@ -60,3 +60,13 @@ This project uses `dedoc/scramble` to automatically generate API documentation.
 ## Security
 - All API routes are protected by Sanctum middleware (except Login/Public endpoints).
 - File uploads are validated for type and size.
+
+## Key Features & Endpoints
+
+### Negotiation (Admin)
+- `GET /api/quotation-responses`: List all responses due for review.
+  - Filter: `?quotation_request_id={id}`
+- `GET /api/quotation-responses/{id}`: View response details.
+- `POST /api/quotation-responses/{id}/approve`: Approve a proposal.
+- `POST /api/quotation-responses/{id}/request-revision`: Request changes.
+- `POST /api/quotation-responses/{id}/create-acquisition`: Generate acquisition order.
