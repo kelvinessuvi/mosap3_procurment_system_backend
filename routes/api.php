@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Suppliers (Manageable by Admin and Technicians)
     Route::apiResource('suppliers', SupplierController::class);
+    Route::get('suppliers/{supplier}/classification', [SupplierController::class, 'classification']);
     
     // Document routes (authenticated users can view documents)
     Route::get('suppliers/{supplier}/documents/{documentType}', [\App\Http\Controllers\DocumentController::class, 'supplierDocument']);

@@ -54,4 +54,9 @@ class Supplier extends Model
     {
         return $this->belongsToMany(Category::class);
     }
+
+    public function evaluation()
+    {
+        return $this->hasOne(SupplierEvaluation::class);
+    }
 }

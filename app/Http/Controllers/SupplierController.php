@@ -184,6 +184,62 @@ class SupplierController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/suppliers/{id}/classification",
+     *     summary="Obter Classificação do Fornecedor",
+     *     description="Retorna a classificação (overall_score) e métricas de desempenho do fornecedor",
+     *     tags={"Fornecedores"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Classificação recuperada com sucesso",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="supplier_id", type="integer"),
+     *             @OA\Property(property="commercial_name", type="string"),
+     *             @OA\Property(property="overall_score", type="number", format="float", example=85.5),
+     *             @OA\Property(property="success_rate", type="number", format="float"),
+     *             @OA\Property(property="response_rate", type="number", format="float"),
+     *             @OA\Property(property="acquisition_rate", type="number", format="float"),
+     *             @OA\Property(property="total_approved", type="integer"),
+     *             @OA\Property(property="total_rejected", type="integer"),
+     *             @OA\Property(property="total_acquisitions", type="integer")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Fornecedor ou avaliação não encontrada")
+     * )
+     */
+    public function classification(Supplier $supplier)
+    {
+        $evaluation = $supplier->evaluation;
+        
+        if (!$evaluation) {
+            return response()->json([
+                'supplier_id' => $supplier->id,
+                'commercial_name' => $supplier->commercial_name,
+                'overall_score' => 0,
+                'message' => 'Nenhuma avaliação disponível ainda'
+            ], 200);
+        }
+
+        return response()->json([
+            'supplier_id' => $supplier->id,
+            'commercial_name' => $supplier->commercial_name,
+            'overall_score' => round($evaluation->overall_score, 2),
+            'success_rate' => round($evaluation->success_rate, 2),
+            'response_rate' => round($evaluation->response_rate, 2),
+            'acquisition_rate' => round($evaluation->acquisition_rate, 2),
+            'total_quotations' => $evaluation->total_quotations,
+            'total_responses' => $evaluation->total_responses,
+            'total_approved' => $evaluation->total_approved,
+            'total_rejected' => $evaluation->total_rejected,
+            'total_acquisitions' => $evaluation->total_acquisitions,
+            'total_revisions_requested' => $evaluation->total_revisions_requested,
+            'avg_response_time_hours' => $evaluation->avg_response_time_hours,
+        ]);
+    }
+
+    /**
      * @OA\Put(
      *     path="/api/suppliers/{id}",
      *     summary="Atualizar fornecedor",
