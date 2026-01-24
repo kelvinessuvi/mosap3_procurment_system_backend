@@ -49,6 +49,14 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    // Notifications
+    Route::get('notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount']);
+    Route::post('notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+    Route::get('notifications/{notification}', [\App\Http\Controllers\NotificationController::class, 'show']);
+    Route::post('notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
+    Route::delete('notifications/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy']);
+
     // Categories (Viewable by all auth users)
     Route::get('categories', [CategoryController::class, 'index']);
     Route::get('categories/{category}', [CategoryController::class, 'show']);

@@ -7,6 +7,7 @@ use App\Mail\ProposalApprovedMail;
 use App\Mail\ProposalRejectedMail;
 use App\Models\Acquisition;
 use App\Models\NegotiationNotification;
+use App\Models\Notification;
 use App\Models\QuotationResponse;
 use App\Models\QuotationSupplier;
 use App\Models\SupplierEvaluation;
@@ -99,6 +100,20 @@ class QuotationResponseController extends Controller
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
             ->send(new ProposalApprovedMail($quotationResponse));
 
+        // Create notification for quotation request creator
+        Notification::create([
+            'user_id' => $quotationResponse->quotationSupplier->quotationRequest->user_id,
+            'type' => 'proposal_approved',
+            'title' => 'Proposta Aprovada',
+            'message' => "A proposta do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi aprovada para a cotação #{$quotationResponse->quotationSupplier->quotationRequest->id}",
+            'data' => [
+                'quotation_request_id' => $quotationResponse->quotationSupplier->quotationRequest->id,
+                'quotation_response_id' => $quotationResponse->id,
+                'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
+                'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name
+            ]
+        ]);
+
         return response()->json($quotationResponse);
     }
 
@@ -133,6 +148,20 @@ class QuotationResponseController extends Controller
         $quotationResponse->load('quotationSupplier.supplier', 'quotationSupplier.quotationRequest');
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
             ->send(new ProposalRejectedMail($quotationResponse));
+
+        // Create notification for quotation request creator
+        Notification::create([
+            'user_id' => $quotationResponse->quotationSupplier->quotationRequest->user_id,
+            'type' => 'proposal_rejected',
+            'title' => 'Proposta Rejeitada',
+            'message' => "A proposta do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi rejeitada para a cotação #{$quotationResponse->quotationSupplier->quotationRequest->id}",
+            'data' => [
+                'quotation_request_id' => $quotationResponse->quotationSupplier->quotationRequest->id,
+                'quotation_response_id' => $quotationResponse->id,
+                'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
+                'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name
+            ]
+        ]);
 
         return response()->json($quotationResponse);
     }
@@ -212,6 +241,21 @@ class QuotationResponseController extends Controller
             ]);
             
             $this->updateSupplierStatistics($qs->supplier_id);
+
+            // Create notification for quotation request creator
+            Notification::create([
+                'user_id' => $qs->quotationRequest->user_id,
+                'type' => 'revision_requested',
+                'title' => 'Revisão Solicitada',
+                'message' => "Uma revisão foi solicitada para a proposta do fornecedor {$qs->supplier->commercial_name} na cotação #{$qs->quotationRequest->id}",
+                'data' => [
+                    'quotation_request_id' => $qs->quotationRequest->id,
+                    'quotation_response_id' => $quotationResponse->id,
+                    'supplier_id' => $qs->supplier_id,
+                    'supplier_name' => $qs->supplier->commercial_name,
+                    'reason' => $validated['reason']
+                ]
+            ]);
 
             return response()->json(['message' => 'Solicitação de revisão enviada.', 'new_token' => $newToken]);
         });

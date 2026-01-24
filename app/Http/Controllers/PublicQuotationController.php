@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\QuotationResponse;
 use App\Models\QuotationSupplier;
 use Illuminate\Http\Request;
@@ -232,6 +233,20 @@ class PublicQuotationController extends Controller
                 'action_notes' => 'Proposta submetida pelo fornecedor',
             ]);
 
+            // Create notification for quotation request creator
+            Notification::create([
+                'user_id' => $qs->quotationRequest->user_id,
+                'type' => 'quotation_response_submitted',
+                'title' => 'Nova Proposta Recebida',
+                'message' => "O fornecedor {$qs->supplier->commercial_name} submeteu uma proposta para a cotação #{$qs->quotationRequest->id}",
+                'data' => [
+                    'quotation_request_id' => $qs->quotationRequest->id,
+                    'quotation_response_id' => $response->id,
+                    'supplier_id' => $qs->supplier_id,
+                    'supplier_name' => $qs->supplier->commercial_name
+                ]
+            ]);
+
             // Update supplier evaluation metrics
             $this->updateSupplierEvaluation($qs->supplier_id);
 
@@ -251,7 +266,22 @@ class PublicQuotationController extends Controller
     public function decline(Request $request, $token)
     {
         $qs = QuotationSupplier::where('token', $token)->firstOrFail();
+        $qs->load('supplier', 'quotationRequest');
         $qs->update(['status' => 'declined']);
+
+        // Create notification for quotation request creator
+        Notification::create([
+            'user_id' => $qs->quotationRequest->user_id,
+            'type' => 'quotation_declined',
+            'title' => 'Fornecedor Declinou Convite',
+            'message' => "O fornecedor {$qs->supplier->commercial_name} declinou a participação na cotação #{$qs->quotationRequest->id}",
+            'data' => [
+                'quotation_request_id' => $qs->quotationRequest->id,
+                'supplier_id' => $qs->supplier_id,
+                'supplier_name' => $qs->supplier->commercial_name
+            ]
+        ]);
+
         return response()->json(['message' => 'Participação declinada.']);
     }
 

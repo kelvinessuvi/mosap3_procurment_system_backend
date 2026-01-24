@@ -46,4 +46,12 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the user's notifications
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

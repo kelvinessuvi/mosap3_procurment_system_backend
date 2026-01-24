@@ -326,6 +326,104 @@
                 ]
             }
         },
+        "/api/suppliers/{id}/documents/{documentType}": {
+            "get": {
+                "tags": [
+                    "Documentos"
+                ],
+                "summary": "Visualizar Documento do Fornecedor",
+                "description": "Retorna o documento do fornecedor (PDF ou imagem). Tipos: commercial_certificate, commercial_license, nif_proof",
+                "operationId": "319abccd8618971b60e8aa957f7a04d6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do fornecedor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "documentType",
+                        "in": "path",
+                        "description": "Tipo de documento",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "commercial_certificate",
+                                "commercial_license",
+                                "nif_proof"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Documento retornado com sucesso",
+                        "content": {
+                            "application/pdf": {},
+                            "image/jpeg": {},
+                            "image/png": {}
+                        }
+                    },
+                    "404": {
+                        "description": "Documento não encontrado"
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-responses/{id}/document": {
+            "get": {
+                "tags": [
+                    "Documentos"
+                ],
+                "summary": "Visualizar Documento da Proposta",
+                "description": "Retorna o documento da proposta enviado pelo fornecedor (PDF ou DOC)",
+                "operationId": "1252255bcf11cf623ae77aae01c18205",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID da resposta de cotação",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Documento retornado com sucesso",
+                        "content": {
+                            "application/pdf": {},
+                            "application/msword": {},
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+                        }
+                    },
+                    "404": {
+                        "description": "Documento não encontrado"
+                    },
+                    "401": {
+                        "description": "Não autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/supplier-evaluations": {
             "get": {
                 "tags": [
@@ -1499,6 +1597,10 @@
         {
             "name": "Dashboard",
             "description": "Estatísticas e Visão Geral"
+        },
+        {
+            "name": "Documentos",
+            "description": "Visualização de Documentos de Fornecedores e Propostas"
         },
         {
             "name": "Avaliações de Fornecedores",
