@@ -28,7 +28,7 @@ class QuotationResponse extends Model
         if (!$this->proposal_document) {
             return null;
         }
-        return url('storage/' . $this->proposal_document);
+        return url('/api/quotation-responses/' . $this->id . '/document');
     }
 
     public function quotationSupplier()

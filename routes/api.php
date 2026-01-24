@@ -55,6 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Suppliers (Manageable by Admin and Technicians)
     Route::apiResource('suppliers', SupplierController::class);
+    
+    // Document routes (authenticated users can view documents)
+    Route::get('suppliers/{supplier}/documents/{documentType}', [\App\Http\Controllers\DocumentController::class, 'supplierDocument']);
+    Route::get('quotation-responses/{quotationResponse}/document', [\App\Http\Controllers\DocumentController::class, 'proposalDocument']);
 
     // Quotation Requests
     Route::apiResource('quotation-requests', QuotationRequestController::class);

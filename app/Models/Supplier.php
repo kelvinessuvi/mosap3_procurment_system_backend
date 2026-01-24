@@ -27,21 +27,21 @@ class Supplier extends Model
     public function getCommercialCertificateUrlAttribute()
     {
         return $this->commercial_certificate 
-            ? url('storage/' . $this->commercial_certificate) 
+            ? url('/api/suppliers/' . $this->id . '/documents/commercial_certificate')
             : null;
     }
 
     public function getCommercialLicenseUrlAttribute()
     {
         return $this->commercial_license 
-            ? url('storage/' . $this->commercial_license) 
+            ? url('/api/suppliers/' . $this->id . '/documents/commercial_license')
             : null;
     }
 
     public function getNifProofUrlAttribute()
     {
         return $this->nif_proof 
-            ? url('storage/' . $this->nif_proof) 
+            ? url('/api/suppliers/' . $this->id . '/documents/nif_proof')
             : null;
     }
 
