@@ -8,6 +8,7 @@ use App\Mail\ProposalRejectedMail;
 use App\Models\Acquisition;
 use App\Models\NegotiationNotification;
 use App\Models\QuotationResponse;
+use App\Models\QuotationSupplier;
 use App\Models\SupplierEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
