@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Acquisitions & Reports
     Route::get('acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'index']);
     Route::get('acquisitions/stats/products', [\App\Http\Controllers\AcquisitionController::class, 'productStats']);
+    Route::post('acquisitions/{acquisition}/confirm-delivery', [\App\Http\Controllers\AcquisitionController::class, 'confirmDelivery']);
     Route::get('reports/summary', [\App\Http\Controllers\ReportsController::class, 'index']);
     Route::get('suppliers/{id}/acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'supplierHistory']);
 

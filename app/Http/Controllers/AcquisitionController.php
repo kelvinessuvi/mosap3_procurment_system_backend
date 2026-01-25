@@ -118,4 +118,31 @@ class AcquisitionController extends Controller
 
         return response()->json($stats);
     }
+
+    /**
+     * @OA\Post(
+     *     path="/api/acquisitions/{acquisition}/confirm-delivery",
+     *     summary="Confirmar Entrega de Aquisição",
+     *     tags={"Aquisições"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="acquisition", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Aquisição marcada como completa")
+     * )
+     */
+    public function confirmDelivery(Acquisition $acquisition)
+    {
+        if ($acquisition->status !== 'pending' && $acquisition->status !== 'in_progress') {
+            return response()->json(['message' => 'Status inválido para confirmação.'], 400);
+        }
+
+        $acquisition->update([
+            'status' => 'completed',
+            'actual_delivery_date' => now()
+        ]);
+
+        return response()->json([
+            'message' => 'Entrega confirmada e aquisição concluída.',
+            'acquisition' => $acquisition
+        ]);
+    }
 }
