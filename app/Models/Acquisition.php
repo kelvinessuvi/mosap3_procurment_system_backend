@@ -32,4 +32,24 @@ class Acquisition extends Model
             }
         });
     }
+
+    public function quotationRequest()
+    {
+        return $this->belongsTo(QuotationRequest::class);
+    }
+
+    public function quotationResponse()
+    {
+        return $this->belongsTo(QuotationResponse::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
