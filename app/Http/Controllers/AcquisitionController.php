@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Acquisition;
+use App\Models\Notification;
 use App\Models\QuotationItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -139,6 +140,22 @@ class AcquisitionController extends Controller
             'status' => 'completed',
             'actual_delivery_date' => now()
         ]);
+
+        // Notify the requester
+        $acquisition->load('quotationRequest');
+        if ($acquisition->quotationRequest && $acquisition->quotationRequest->user_id) {
+            \App\Models\Notification::create([
+                'user_id' => $acquisition->quotationRequest->user_id,
+                'type' => 'acquisition_delivered',
+                'title' => 'Entrega Confirmada',
+                'message' => "A entrega da aquisição #{$acquisition->reference_number} foi confirmada.",
+                'data' => [
+                    'acquisition_id' => $acquisition->id,
+                    'reference_number' => $acquisition->reference_number,
+                    'supplier_name' => $acquisition->supplier->commercial_name ?? 'Fornecedor'
+                ]
+            ]);
+        }
 
         return response()->json([
             'message' => 'Entrega confirmada e aquisição concluída.',
