@@ -123,7 +123,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $item->name }} ({{ $item->quantity }})</label>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs text-gray-500">Preço Unitário (KZ)</label>
+                                    <label class="text-xs text-gray-500">Preço Total (KZ)</label>
                                     <input type="number" step="0.01" name="items[{{ $index }}][unit_price]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
                                     <input type="hidden" name="items[{{ $index }}][quotation_item_id]" value="{{ $item->id }}">
                                 </div>
