@@ -255,6 +255,8 @@
                 console.error(error);
                 alert('Erro de conexão.');
             }
+        });
+
         // Auto-fill delivery days
         const deliveryDateInput = document.querySelector('input[name="delivery_date"]');
         const deliveryDaysInput = document.querySelector('input[name="delivery_days"]');
