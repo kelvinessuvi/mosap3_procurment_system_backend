@@ -255,7 +255,30 @@
                 console.error(error);
                 alert('Erro de conexão.');
             }
-        });
+        // Auto-fill delivery days
+        const deliveryDateInput = document.querySelector('input[name="delivery_date"]');
+        const deliveryDaysInput = document.querySelector('input[name="delivery_days"]');
+
+        if (deliveryDateInput && deliveryDaysInput) {
+            deliveryDateInput.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const today = new Date();
+                
+                // Reset hours to compare just dates
+                selectedDate.setHours(0,0,0,0);
+                today.setHours(0,0,0,0);
+                
+                if (selectedDate > today) {
+                    const diffTime = Math.abs(selectedDate - today);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    deliveryDaysInput.value = diffDays;
+                } else {
+                    // If date is today or past, logic might vary, but usually implies 0 or error.
+                    // Validation usually prevents past dates ("after:now" in controller).
+                    deliveryDaysInput.value = '';
+                }
+            });
+        }
     </script>
 </body>
 </html>
