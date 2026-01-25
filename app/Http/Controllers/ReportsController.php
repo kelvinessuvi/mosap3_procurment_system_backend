@@ -137,7 +137,7 @@ class ReportsController extends Controller
             ->select(
                 'suppliers.id',
                 'suppliers.commercial_name as name',
-                \Illuminate\Support\Facades\DB::raw('SUM(acquisitions.total_amount) as total'),
+                \Illuminate\Support\Facades\DB::raw('COALESCE(SUM(acquisitions.total_amount), 0) as total'),
                 \Illuminate\Support\Facades\DB::raw('COUNT(acquisitions.id) as count')
             )
             ->groupBy('suppliers.id', 'suppliers.commercial_name')
@@ -157,7 +157,8 @@ class ReportsController extends Controller
             ->whereBetween('acquisitions.created_at', [$startDate, $endDate])
             ->select(
                 \Illuminate\Support\Facades\DB::raw('COALESCE(products.name, quotation_items.name) as name'),
-                \Illuminate\Support\Facades\DB::raw('SUM(quotation_response_items.total_price) as total'),
+                // Calculate total if null: unit_price * quantity
+                \Illuminate\Support\Facades\DB::raw('SUM(COALESCE(quotation_response_items.total_price, quotation_response_items.unit_price * quotation_items.quantity)) as total'),
                 \Illuminate\Support\Facades\DB::raw('SUM(quotation_items.quantity) as quantity')
             )
             ->groupBy('name')

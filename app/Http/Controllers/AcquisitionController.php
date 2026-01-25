@@ -108,8 +108,8 @@ class AcquisitionController extends Controller
             ->whereBetween('acquisitions.created_at', [$startDate, $endDate])
             ->select(
                 DB::raw('COALESCE(products.name, quotation_items.name) as product_name'),
-                DB::raw('SUM(quotation_items.quantity) as total_quantity'), // Quantity is on Request Item (QuotationItem). ResponseItem usually confirms unit price but quantity is fixed by Request unless negotiation changed it? Wait, QuotationResponseItem doesn't have quantity in migration, it links to QuotationItem which has quantity. Correct.
-                DB::raw('SUM(quotation_response_items.total_price) as total_spent'),
+                DB::raw('SUM(quotation_items.quantity) as total_quantity'), 
+                DB::raw('SUM(COALESCE(quotation_response_items.total_price, quotation_response_items.unit_price * quotation_items.quantity)) as total_spent'),
                 DB::raw('COUNT(acquisitions.id) as acquisition_count')
             )
             ->groupBy('product_name')
