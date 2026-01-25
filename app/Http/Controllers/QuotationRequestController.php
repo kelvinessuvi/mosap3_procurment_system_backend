@@ -85,6 +85,7 @@ class QuotationRequestController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit' => 'required|string',
             'items.*.specifications' => 'nullable|string',
+            'items.*.product_id' => 'nullable|exists:products,id',
             'suppliers' => 'required|array|min:1',
             'suppliers.*' => 'exists:suppliers,id',
         ]);
@@ -99,6 +100,19 @@ class QuotationRequestController extends Controller
             ]);
 
             foreach ($validated['items'] as $item) {
+                // Auto-link to product catalog
+                if (!isset($item['product_id'])) {
+                    // Check if product exists by name (case insensitive ideally, but exact for now)
+                    $product = \App\Models\Product::firstOrCreate(
+                        ['name' => $item['name']],
+                        [
+                            'unit' => $item['unit'],
+                            'description' => $item['specifications'] ?? null
+                        ]
+                    );
+                    $item['product_id'] = $product->id;
+                }
+                
                 $quotation->items()->create($item);
             }
 
