@@ -291,12 +291,24 @@ class QuotationResponseController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated, $quotationResponse) {
+            // Calculate robust total amount
+            $quotationResponse->load('items.quotationItem');
+            $totalAmount = 0;
+            foreach ($quotationResponse->items as $item) {
+                // Use total_price if valid, otherwise calculate
+                if ($item->total_price > 0) {
+                    $totalAmount += $item->total_price;
+                } else {
+                    $totalAmount += ($item->unit_price * $item->quotationItem->quantity);
+                }
+            }
+
             $acquisition = Acquisition::create([
                 'quotation_request_id' => $quotationResponse->quotationSupplier->quotation_request_id,
                 'quotation_response_id' => $quotationResponse->id,
                 'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
                 'user_id' => auth()->id(),
-                'total_amount' => $quotationResponse->items->sum('total_price') ?? $quotationResponse->items->sum('unit_price'), // Use total_price if calc implemented
+                'total_amount' => $totalAmount,
                 'justification' => $validated['justification'] ?? null,
                 'status' => 'pending',
                 'expected_delivery_date' => $validated['expected_delivery_date'],
