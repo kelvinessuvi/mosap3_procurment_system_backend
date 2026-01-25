@@ -70,4 +70,63 @@ class ProductController extends Controller
 
         return response()->json($product, 201);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/products/{id}/analytics",
+     *     summary="Análise de Preços do Produto",
+     *     description="Retorna melhor preço, média e histórico de preços praticados.",
+     *     tags={"Catálogo de Produtos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Dados de análise de preço")
+     * )
+     */
+    public function priceAnalytics($id)
+    {
+        $product = Product::findOrFail($id);
+
+        // Find all unit prices offered for this product via QuotationResponseItems
+        // Linking: Product <- QuotationItem <- QuotationResponseItem
+        $prices = \Illuminate\Support\Facades\DB::table('quotation_response_items')
+            ->join('quotation_items', 'quotation_response_items.quotation_item_id', '=', 'quotation_items.id')
+            ->join('quotation_responses', 'quotation_response_items.quotation_response_id', '=', 'quotation_responses.id')
+            ->join('quotation_suppliers', 'quotation_responses.quotation_supplier_id', '=', 'quotation_suppliers.id')
+            ->join('suppliers', 'quotation_suppliers.supplier_id', '=', 'suppliers.id')
+            ->where('quotation_items.product_id', $id)
+            ->whereIn('quotation_responses.status', ['approved', 'completed', 'submitted']) // Consider valid offers
+            ->select(
+                'quotation_response_items.unit_price',
+                'quotation_responses.submitted_at',
+                'suppliers.commercial_name as supplier_name'
+            )
+            ->orderBy('quotation_responses.submitted_at', 'desc')
+            ->get();
+
+        if ($prices->isEmpty()) {
+             return response()->json([
+                 'message' => 'Sem dados históricos para este produto.',
+                 'best_price' => null,
+                 'average_price' => null
+             ]);
+        }
+
+        $minPrice = $prices->min('unit_price');
+        $avgPrice = $prices->avg('unit_price');
+        $maxPrice = $prices->max('unit_price');
+        $lastPrice = $prices->first()->unit_price;
+
+        $bestOffer = $prices->firstWhere('unit_price', $minPrice);
+
+        return response()->json([
+            'product' => $product,
+            'best_price' => $minPrice,
+            'best_supplier' => $bestOffer->supplier_name,
+            'best_date' => $bestOffer->submitted_at,
+            'average_price' => round($avgPrice, 2),
+            'max_price' => $maxPrice,
+            'last_price' => $lastPrice,
+            'price_history' => $prices->take(10) // Last 10 prices
+        ]);
+    }
 }

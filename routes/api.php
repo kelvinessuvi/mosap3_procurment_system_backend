@@ -62,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('categories/{category}', [CategoryController::class, 'show']);
 
     // Products Catalog
+    Route::get('products/{id}/analytics', [\App\Http\Controllers\ProductController::class, 'priceAnalytics']);
     Route::apiResource('products', \App\Http\Controllers\ProductController::class);
 
     // Acquisitions & Reports

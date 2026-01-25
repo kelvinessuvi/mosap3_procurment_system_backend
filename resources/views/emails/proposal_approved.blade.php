@@ -1,55 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Proposta Aprovada</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #10b981; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-        .content { background-color: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
-        .footer { background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 5px 5px; }
-        .badge { background-color: #10b981; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold; }
-        .info-box { background-color: white; padding: 15px; margin: 15px 0; border-left: 4px solid #10b981; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>✓ Proposta Aprovada</h1>
-        </div>
-        
-        <div class="content">
-            <p>Prezado fornecedor <strong>{{ $supplier->commercial_name }}</strong>,</p>
-            
-            <p>Temos o prazer de informar que sua proposta foi <span class="badge">APROVADA</span>!</p>
-            
-            <div class="info-box">
-                <strong>Pedido de Cotação:</strong> {{ $quotationRequest->reference_number }}<br>
-                <strong>Título:</strong> {{ $quotationRequest->title }}<br>
-                <strong>Data de Submissão:</strong> {{ $quotationResponse->submitted_at->format('d/m/Y H:i') }}
-            </div>
-            
-            @if($quotationResponse->review_notes)
-            <div class="info-box">
-                <strong>Observações:</strong><br>
-                {{ $quotationResponse->review_notes }}
-            </div>
-            @endif
-            
-            <p><strong>Próximos passos:</strong></p>
-            <ul>
-                <li>Nossa equipe entrará em contato em breve para os próximos procedimentos</li>
-                <li>Por favor, mantenha-se disponível para esclarecimentos adicionais</li>
-                <li>Aguarde informações sobre o processo de aquisição</li>
-            </ul>
-            
-            <p>Agradecemos pela sua participação e profissionalismo.</p>
-        </div>
-        
-        <div class="footer">
-            <p>Atenciosamente,<br>
-            <strong>Equipe de Procurement MOSAP3</strong></p>
-        </div>
+@extends('emails.layouts.master')
+
+@section('content')
+    <div style="text-align: center; margin-bottom: 24px;">
+        <span style="background-color: #10b981; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px;">APROVADA</span>
     </div>
-</body>
-</html>
+
+    <h2 style="text-align: center; color: #065f46;">Parabéns! Sua proposta foi aprovada.</h2>
+    
+    <p>Prezado fornecedor <strong>{{ $supplier->commercial_name }}</strong>,</p>
+    
+    <p>Temos o prazer de informar que sua proposta foi selecionada em nosso processo de aquisição.</p>
+    
+    <div style="background-color: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 16px; margin: 24px 0;">
+        <p style="margin: 0 0 8px;"><strong>Pedido:</strong> {{ $quotationRequest->reference_number }}</p>
+        <p style="margin: 0 0 8px;"><strong>Título:</strong> {{ $quotationRequest->title }}</p>
+        <p style="margin: 0;"><strong>Data de Envio:</strong> {{ $quotationResponse->submitted_at->format('d/m/Y') }}</p>
+    </div>
+    
+    @if($quotationResponse->review_notes)
+    <p><strong>Observações da Aprovação:</strong></p>
+    <blockquote style="border-left: 4px solid #10b981; margin: 0; padding-left: 16px; color: #4b5563; font-style: italic;">
+        "{{ $quotationResponse->review_notes }}"
+    </blockquote>
+    @endif
+    
+    <div class="divider"></div>
+
+    <h3>Próximos Passos</h3>
+    <ul>
+        <li>Nossa equipe entrará em contato em breve para formalizar o pedido.</li>
+        <li>Fique atento para a emissão da Ordem de Compra.</li>
+    </ul>
+    
+    <p style="margin-top: 24px;">Agradecemos pelo excelente trabalho!</p>
+    <p style="margin-bottom:0;">Atenciosamente,<br><strong>Equipe de Procurement</strong></p>
+@endsection
