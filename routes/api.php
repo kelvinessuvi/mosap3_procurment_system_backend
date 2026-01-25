@@ -64,9 +64,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Products Catalog
     Route::apiResource('products', \App\Http\Controllers\ProductController::class);
 
-    // Acquisitions
+    // Acquisitions & Reports
     Route::get('acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'index']);
     Route::get('acquisitions/stats/products', [\App\Http\Controllers\AcquisitionController::class, 'productStats']);
+    Route::get('reports/summary', [\App\Http\Controllers\ReportsController::class, 'index']);
     Route::get('suppliers/{id}/acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'supplierHistory']);
 
     // Suppliers (Manageable by Admin and Technicians)
