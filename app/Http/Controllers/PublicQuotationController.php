@@ -285,6 +285,66 @@ class PublicQuotationController extends Controller
         return response()->json(['message' => 'Participação declinada.']);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/quotation/{token}/attachments/{index}",
+     *     summary="Descarregar Anexo do Pedido de Cotação",
+     *     description="Permite ao fornecedor descarregar um documento anexado ao pedido de cotação. Acesso via token do email, sem autenticação necessária.",
+     *     tags={"Link Público (Email)"},
+     *     @OA\Parameter(
+     *         name="token",
+     *         in="path",
+     *         required=true,
+     *         description="Token de acesso do fornecedor (enviado por email)",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="index",
+     *         in="path",
+     *         required=true,
+     *         description="Índice do anexo na lista de documentos (começa em 0)",
+     *         @OA\Schema(type="integer", minimum=0)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Documento retornado com sucesso",
+     *         @OA\MediaType(mediaType="application/pdf"),
+     *         @OA\MediaType(mediaType="application/msword"),
+     *         @OA\MediaType(mediaType="application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+     *         @OA\MediaType(mediaType="image/jpeg"),
+     *         @OA\MediaType(mediaType="image/png")
+     *     ),
+     *     @OA\Response(response=404, description="Anexo ou ficheiro não encontrado")
+     * )
+     */
+    public function downloadAttachment($token, $index)
+    {
+        $qs = QuotationSupplier::with('quotationRequest')
+            ->where('token', $token)
+            ->firstOrFail();
+
+        $attachments = $qs->quotationRequest->attachments ?? [];
+
+        if (!isset($attachments[$index])) {
+            abort(404, 'Anexo não encontrado.');
+        }
+
+        $attachment = $attachments[$index];
+        $filePath = $attachment['path'];
+
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($filePath)) {
+            abort(404, 'Ficheiro não encontrado.');
+        }
+
+        return response()->file(
+            \Illuminate\Support\Facades\Storage::disk('public')->path($filePath),
+            [
+                'Content-Type' => \Illuminate\Support\Facades\Storage::disk('public')->mimeType($filePath),
+                'Content-Disposition' => 'inline; filename="' . ($attachment['original_name'] ?? basename($filePath)) . '"'
+            ]
+        );
+    }
+
     private function updateSupplierEvaluation($supplierId) 
     {
         // Calculate metrics

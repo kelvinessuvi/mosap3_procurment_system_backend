@@ -19,7 +19,7 @@ class DocumentController extends Controller
      * @OA\Get(
      *     path="/api/suppliers/{id}/documents/{documentType}",
      *     summary="Visualizar Documento do Fornecedor",
-     *     description="Retorna o documento do fornecedor (PDF ou imagem). Tipos: commercial_certificate, commercial_license, nif_proof",
+     *     description="Retorna o documento do fornecedor (PDF ou imagem). Tipos disponíveis: commercial_certificate (Certificado Comercial), commercial_license (Alvará Comercial), nif_proof (Comprovativo de NIF), pacto_social (Pacto Social), non_debtor_certificate (Certificado de Não Devedor)",
      *     tags={"Documentos"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
@@ -36,7 +36,7 @@ class DocumentController extends Controller
      *         description="Tipo de documento",
      *         @OA\Schema(
      *             type="string",
-     *             enum={"commercial_certificate", "commercial_license", "nif_proof"}
+     *             enum={"commercial_certificate", "commercial_license", "nif_proof", "pacto_social", "non_debtor_certificate"}
      *         )
      *     ),
      *     @OA\Response(
@@ -59,7 +59,7 @@ class DocumentController extends Controller
     public function supplierDocument(Supplier $supplier, string $documentType)
     {
         // Validate document type
-        if (!in_array($documentType, ['commercial_certificate', 'commercial_license', 'nif_proof'])) {
+        if (!in_array($documentType, ['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate'])) {
             abort(404);
         }
 

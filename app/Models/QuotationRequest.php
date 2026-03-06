@@ -11,11 +11,12 @@ class QuotationRequest extends Model
 
     protected $fillable = [
         'reference_number', 'title', 'description', 
-        'deadline', 'status', 'user_id'
+        'deadline', 'status', 'user_id', 'attachments'
     ];
 
     protected $casts = [
         'deadline' => 'datetime',
+        'attachments' => 'array',
     ];
 
     public static function boot()

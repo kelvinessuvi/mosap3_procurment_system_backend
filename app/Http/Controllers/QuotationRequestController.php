@@ -51,26 +51,56 @@ class QuotationRequestController extends Controller
      * @OA\Post(
      *     path="/api/quotation-requests",
      *     summary="Criar novo pedido de cotação",
+     *     description="Cria um novo pedido de cotação com itens, fornecedores convidados e documentos anexados opcionais. O pedido é criado com status 'draft'.",
      *     tags={"Cotações (Requests)"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"title", "deadline", "items", "suppliers"},
-     *             @OA\Property(property="title", type="string", example="Aquisição de Mobiliário"),
-     *             @OA\Property(property="description", type="string", example="Mobiliário para novo escritório"),
-     *             @OA\Property(property="deadline", type="string", format="date-time", example="2026-02-01 17:00:00"),
-     *             @OA\Property(property="items", type="array", @OA\Items(
-     *                 required={"name", "quantity", "unit"},
-     *                 @OA\Property(property="name", type="string", example="Cadeira Giratória"),
-     *                 @OA\Property(property="quantity", type="integer", example=10),
-     *                 @OA\Property(property="unit", type="string", example="un"),
-     *                 @OA\Property(property="specifications", type="string", example="Cor preta, ergonômica")
-     *             )),
-     *             @OA\Property(property="suppliers", type="array", @OA\Items(type="integer"), example={1, 2}, description="IDs dos fornecedores convidados")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"title", "deadline", "items", "suppliers"},
+     *                 @OA\Property(property="title", type="string", example="Aquisição de Mobiliário", description="Título do pedido de cotação"),
+     *                 @OA\Property(property="description", type="string", example="Mobiliário para novo escritório", description="Descrição detalhada do pedido"),
+     *                 @OA\Property(property="deadline", type="string", format="date-time", example="2026-02-01 17:00:00", description="Data limite para envio de propostas"),
+     *                 @OA\Property(
+     *                     property="items",
+     *                     type="array",
+     *                     description="Lista de itens solicitados",
+     *                     @OA\Items(
+     *                         required={"name", "quantity", "unit"},
+     *                         @OA\Property(property="name", type="string", example="Cadeira Giratória"),
+     *                         @OA\Property(property="quantity", type="integer", example=10),
+     *                         @OA\Property(property="unit", type="string", example="un"),
+     *                         @OA\Property(property="specifications", type="string", example="Cor preta, ergonômica")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="suppliers", type="array", @OA\Items(type="integer"), example={1, 2}, description="IDs dos fornecedores convidados"),
+     *                 @OA\Property(
+     *                     property="attachments[]",
+     *                     type="array",
+     *                     description="Documentos anexados ao pedido (PDF, DOC, DOCX, JPG, PNG, XLSX, XLS — máx 10MB cada)",
+     *                     @OA\Items(type="string", format="binary")
+     *                 )
+     *             )
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Criado com sucesso"),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Pedido criado com sucesso",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="reference_number", type="string"),
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="status", type="string", example="draft"),
+     *             @OA\Property(property="attachments", type="array", nullable=true, @OA\Items(
+     *                 @OA\Property(property="path", type="string"),
+     *                 @OA\Property(property="original_name", type="string")
+     *             )),
+     *             @OA\Property(property="items", type="array", @OA\Items(type="object")),
+     *             @OA\Property(property="suppliers", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
      *     @OA\Response(response=422, description="Erro de validação")
      * )
      */
@@ -88,6 +118,8 @@ class QuotationRequestController extends Controller
             'items.*.product_id' => 'nullable|exists:products,id',
             'suppliers' => 'required|array|min:1',
             'suppliers.*' => 'exists:suppliers,id',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240',
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
@@ -98,6 +130,20 @@ class QuotationRequestController extends Controller
                 'status' => 'draft',
                 'user_id' => $request->user()->id,
             ]);
+
+            // Handle file attachments
+            if ($request->hasFile('attachments')) {
+                $attachmentPaths = [];
+                foreach ($request->file('attachments') as $file) {
+                    $originalName = $file->getClientOriginalName();
+                    $path = $file->store('quotation_attachments', 'public');
+                    $attachmentPaths[] = [
+                        'path' => $path,
+                        'original_name' => $originalName,
+                    ];
+                }
+                $quotation->update(['attachments' => $attachmentPaths]);
+            }
 
             foreach ($validated['items'] as $item) {
                 // Auto-link to product catalog
@@ -132,7 +178,35 @@ class QuotationRequestController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * @OA\Post(
+     *     path="/api/quotation-requests/{id}",
+     *     summary="Atualizar pedido de cotação",
+     *     description="Atualiza um pedido de cotação em rascunho. Permite alterar título, descrição, prazo e adicionar novos documentos anexados. Use _method=PUT para uploads.",
+     *     tags={"Cotações (Requests)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="ID do pedido de cotação", @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="_method", type="string", example="PUT", description="Necessário para upload de arquivos em PUT"),
+     *                 @OA\Property(property="title", type="string", example="Aquisição de Mobiliário", description="Título do pedido"),
+     *                 @OA\Property(property="description", type="string", description="Descrição detalhada"),
+     *                 @OA\Property(property="deadline", type="string", format="date-time", description="Novo prazo limite"),
+     *                 @OA\Property(
+     *                     property="attachments[]",
+     *                     type="array",
+     *                     description="Novos documentos a anexar (serão adicionados aos existentes). PDF, DOC, DOCX, JPG, PNG, XLSX, XLS — máx 10MB cada.",
+     *                     @OA\Items(type="string", format="binary")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Pedido atualizado com sucesso"),
+     *     @OA\Response(response=400, description="Apenas cotações em rascunho podem ser editadas"),
+     *     @OA\Response(response=422, description="Erro de validação")
+     * )
      */
     public function update(Request $request, QuotationRequest $quotationRequest)
     {
@@ -145,7 +219,23 @@ class QuotationRequestController extends Controller
             'title' => 'string|max:255',
             'description' => 'nullable|string',
             'deadline' => 'date|after:now',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240',
         ]);
+
+        // Handle file attachments
+        if ($request->hasFile('attachments')) {
+            $existingAttachments = $quotationRequest->attachments ?? [];
+            foreach ($request->file('attachments') as $file) {
+                $originalName = $file->getClientOriginalName();
+                $path = $file->store('quotation_attachments', 'public');
+                $existingAttachments[] = [
+                    'path' => $path,
+                    'original_name' => $originalName,
+                ];
+            }
+            $validated['attachments'] = $existingAttachments;
+        }
 
         $quotationRequest->update($validated);
 
@@ -203,7 +293,8 @@ class QuotationRequestController extends Controller
             Mail::to($qs->supplier->email)->send(new QuotationRequestMail(
                 $quotationRequest, 
                 $qs->supplier, 
-                $qs->token
+                $qs->token,
+                $quotationRequest->user
             ));
 
             $qs->update([

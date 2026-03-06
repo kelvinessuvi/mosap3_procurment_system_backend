@@ -41,6 +41,7 @@ Route::get('/login', function () {
 Route::get('/quotation/{token}', [\App\Http\Controllers\PublicQuotationController::class, 'show']);
 Route::post('/quotation/{token}/submit', [\App\Http\Controllers\PublicQuotationController::class, 'submit']);
 Route::post('/quotation/{token}/decline', [\App\Http\Controllers\PublicQuotationController::class, 'decline']);
+Route::get('/quotation/{token}/attachments/{index}', [\App\Http\Controllers\PublicQuotationController::class, 'downloadAttachment']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

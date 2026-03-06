@@ -21,12 +21,42 @@
                         <p class="text-lg font-semibold text-red-600">{{ \Carbon\Carbon::parse($quotation->deadline)->format('d/m/Y H:i') }}</p>
                     </div>
                 </div>
+                @if($quotationSupplier->sent_at)
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                    <p class="text-sm text-gray-500">Submetido em: <span class="font-medium text-gray-700">{{ \Carbon\Carbon::parse($quotationSupplier->sent_at)->format('d/m/Y H:i') }}</span></p>
+                </div>
+                @endif
             </div>
             
             <div class="px-6 py-6 bg-gray-50">
                 <p class="text-gray-700">{{ $quotation->description }}</p>
             </div>
         </div>
+
+        <!-- Attached Documents -->
+        @if($quotation->attachments && count($quotation->attachments) > 0)
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-medium text-gray-900">📎 Documentos Anexados</h3>
+            </div>
+            <div class="px-6 py-4">
+                <ul class="space-y-2">
+                    @foreach($quotation->attachments as $index => $attachment)
+                    <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition">
+                        <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <a href="{{ url('/api/quotation/' . $token . '/attachments/' . $index) }}" 
+                           class="text-blue-600 hover:text-blue-800 text-sm font-medium" 
+                           target="_blank">
+                            {{ $attachment['original_name'] ?? 'Documento ' . ($index + 1) }}
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        @endif
 
         <!-- Items Table -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">

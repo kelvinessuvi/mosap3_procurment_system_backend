@@ -77,37 +77,57 @@ class SupplierController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    /**
-     * @OA\Post(
-     *     path="/api/suppliers",
-     *     summary="Criar novo fornecedor",
-     *     tags={"Fornecedores"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"legal_name", "commercial_name", "email", "phone", "nif", "activity_type", "province", "municipality", "address"},
-     *                 @OA\Property(property="legal_name", type="string", example="Empresa Exemplo SA"),
-     *                 @OA\Property(property="commercial_name", type="string", example="Exemplo Comercial"),
-     *                 @OA\Property(property="email", type="string", format="email", example="contato@exemplo.ao"),
-     *                 @OA\Property(property="phone", type="string", example="+244923456789"),
-     *                 @OA\Property(property="nif", type="string", example="5001234567"),
-     *                 @OA\Property(property="activity_type", type="string", enum={"Serviços", "Comércio Geral", "Tecnologia", "Construção", "Consultoria", "Transporte", "Saúde", "Outros"}),
-     *                 @OA\Property(property="province", type="string", example="Luanda"),
-     *                 @OA\Property(property="municipality", type="string", example="Belas"),
-     *                 @OA\Property(property="address", type="string", example="Rua das Acácias, 12"),
-     *                 @OA\Property(property="commercial_certificate", type="string", format="binary", description="Certificado Comercial (PDF/IMG)"),
-     *                 @OA\Property(property="commercial_license", type="string", format="binary", description="Alvará (PDF/IMG)"),
-     *                 @OA\Property(property="nif_proof", type="string", format="binary", description="Comprovativo NIF (PDF/IMG)"),
-     *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"), description="IDs das categorias")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Fornecedor criado com sucesso"),
-     *     @OA\Response(response=422, description="Erro de validação")
-     * )
+     /**
+      * @OA\Post(
+      *     path="/api/suppliers",
+      *     summary="Criar novo fornecedor",
+      *     description="Regista um novo fornecedor com dados cadastrais, categorias e documentos obrigatórios/opcionais.",
+      *     tags={"Fornecedores"},
+      *     security={{"bearerAuth":{}}},
+      *     @OA\RequestBody(
+      *         required=true,
+      *         @OA\MediaType(
+      *             mediaType="multipart/form-data",
+      *             @OA\Schema(
+      *                 required={"legal_name", "commercial_name", "email", "phone", "nif", "activity_type", "province", "municipality", "address", "commercial_certificate", "nif_proof"},
+      *                 @OA\Property(property="legal_name", type="string", example="Empresa Exemplo SA", description="Razão social da empresa"),
+      *                 @OA\Property(property="commercial_name", type="string", example="Exemplo Comercial", description="Nome comercial da empresa"),
+      *                 @OA\Property(property="email", type="string", format="email", example="contato@exemplo.ao", description="Email do fornecedor (único)"),
+      *                 @OA\Property(property="phone", type="string", example="+244923456789", description="Telefone de contacto"),
+      *                 @OA\Property(property="nif", type="string", example="5001234567", description="NIF do fornecedor (único)"),
+      *                 @OA\Property(property="activity_type", type="string", enum={"Serviços", "Comércio Geral", "Tecnologia", "Construção", "Consultoria", "Transporte", "Saúde", "Outros"}, description="Tipo de atividade da empresa"),
+      *                 @OA\Property(property="province", type="string", example="Luanda", description="Província"),
+      *                 @OA\Property(property="municipality", type="string", example="Belas", description="Município"),
+      *                 @OA\Property(property="address", type="string", example="Rua das Acácias, 12", description="Endereço completo"),
+      *                 @OA\Property(property="commercial_certificate", type="string", format="binary", description="Certificado Comercial (PDF/JPG/PNG, máx 5MB) — Obrigatório"),
+      *                 @OA\Property(property="commercial_license", type="string", format="binary", description="Alvará Comercial (PDF/JPG/PNG, máx 5MB) — Opcional"),
+      *                 @OA\Property(property="nif_proof", type="string", format="binary", description="Comprovativo de NIF (PDF/JPG/PNG, máx 5MB) — Obrigatório"),
+      *                 @OA\Property(property="pacto_social", type="string", format="binary", description="Pacto Social (PDF/JPG/PNG, máx 5MB) — Opcional"),
+      *                 @OA\Property(property="non_debtor_certificate", type="string", format="binary", description="Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB) — Opcional"),
+      *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"), description="IDs das categorias associadas ao fornecedor")
+      *             )
+      *         )
+      *     ),
+      *     @OA\Response(
+      *         response=201,
+      *         description="Fornecedor criado com sucesso",
+      *         @OA\JsonContent(
+      *             @OA\Property(property="id", type="integer", example=1),
+      *             @OA\Property(property="legal_name", type="string"),
+      *             @OA\Property(property="commercial_name", type="string"),
+      *             @OA\Property(property="email", type="string"),
+      *             @OA\Property(property="nif", type="string"),
+      *             @OA\Property(property="is_active", type="boolean"),
+      *             @OA\Property(property="commercial_certificate_url", type="string", nullable=true),
+      *             @OA\Property(property="commercial_license_url", type="string", nullable=true),
+      *             @OA\Property(property="nif_proof_url", type="string", nullable=true),
+      *             @OA\Property(property="pacto_social_url", type="string", nullable=true),
+      *             @OA\Property(property="non_debtor_certificate_url", type="string", nullable=true),
+      *             @OA\Property(property="categories", type="array", @OA\Items(type="object"))
+      *         )
+      *     ),
+      *     @OA\Response(response=422, description="Erro de validação")
+      * )
      */
     public function store(Request $request)
     {
@@ -133,6 +153,8 @@ class SupplierController extends Controller
             'commercial_certificate' => 'required|file|mimes:pdf,jpg,png|max:5120', 
             'commercial_license' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'nif_proof' => 'required|file|mimes:pdf,jpg,png|max:5120',
+            'pacto_social' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
         ]);
 
         // Handle file uploads
@@ -146,6 +168,12 @@ class SupplierController extends Controller
         }
         if ($request->hasFile('nif_proof')) {
             $validated['nif_proof'] = $request->file('nif_proof')->store($uploadPath, 'public');
+        }
+        if ($request->hasFile('pacto_social')) {
+            $validated['pacto_social'] = $request->file('pacto_social')->store($uploadPath, 'public');
+        }
+        if ($request->hasFile('non_debtor_certificate')) {
+            $validated['non_debtor_certificate'] = $request->file('non_debtor_certificate')->store($uploadPath, 'public');
         }
 
         // Map activity_type to DB enum
@@ -240,36 +268,39 @@ class SupplierController extends Controller
     }
 
     /**
-     * @OA\Put(
+     * @OA\Post(
      *     path="/api/suppliers/{id}",
      *     summary="Atualizar fornecedor",
+     *     description="Atualiza dados cadastrais e documentos de um fornecedor existente. Use _method=PUT para uploads de arquivos.",
      *     tags={"Fornecedores"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="id", in="path", required=true, description="ID do fornecedor", @OA\Schema(type="integer")),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 @OA\Property(property="legal_name", type="string"),
-     *                 @OA\Property(property="commercial_name", type="string"),
-     *                 @OA\Property(property="email", type="string", format="email"),
-     *                 @OA\Property(property="phone", type="string"),
-     *                 @OA\Property(property="nif", type="string"),
-     *                 @OA\Property(property="activity_type", type="string", enum={"Serviços", "Comércio Geral"}),
-     *                 @OA\Property(property="province", type="string"),
-     *                 @OA\Property(property="municipality", type="string"),
-     *                 @OA\Property(property="address", type="string"),
-     *                 @OA\Property(property="is_active", type="boolean"),
-     *                 @OA\Property(property="commercial_certificate", type="string", format="binary"),
-     *                 @OA\Property(property="commercial_license", type="string", format="binary"),
-     *                 @OA\Property(property="nif_proof", type="string", format="binary"),
-     *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer")),
-     *                 @OA\Property(property="_method", type="string", example="PUT", description="Necessário para upload de arquivos em PUT")
+     *                 @OA\Property(property="_method", type="string", example="PUT", description="Necessário para upload de arquivos em PUT"),
+     *                 @OA\Property(property="legal_name", type="string", description="Razão social"),
+     *                 @OA\Property(property="commercial_name", type="string", description="Nome comercial"),
+     *                 @OA\Property(property="email", type="string", format="email", description="Email (único)"),
+     *                 @OA\Property(property="phone", type="string", description="Telefone"),
+     *                 @OA\Property(property="nif", type="string", description="NIF (único)"),
+     *                 @OA\Property(property="activity_type", type="string", enum={"Serviços", "Comércio Geral"}, description="Tipo de atividade"),
+     *                 @OA\Property(property="province", type="string", description="Província"),
+     *                 @OA\Property(property="municipality", type="string", description="Município"),
+     *                 @OA\Property(property="address", type="string", description="Endereço"),
+     *                 @OA\Property(property="is_active", type="boolean", description="Estado ativo/inativo"),
+     *                 @OA\Property(property="commercial_certificate", type="string", format="binary", description="Certificado Comercial (PDF/JPG/PNG, máx 5MB)"),
+     *                 @OA\Property(property="commercial_license", type="string", format="binary", description="Alvará Comercial (PDF/JPG/PNG, máx 5MB)"),
+     *                 @OA\Property(property="nif_proof", type="string", format="binary", description="Comprovativo de NIF (PDF/JPG/PNG, máx 5MB)"),
+     *                 @OA\Property(property="pacto_social", type="string", format="binary", description="Pacto Social (PDF/JPG/PNG, máx 5MB)"),
+     *                 @OA\Property(property="non_debtor_certificate", type="string", format="binary", description="Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB)"),
+     *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"), description="IDs das categorias")
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Fornecedor atualizado"),
+     *     @OA\Response(response=200, description="Fornecedor atualizado com sucesso"),
      *     @OA\Response(response=422, description="Erro de validação")
      * )
      */
@@ -296,6 +327,8 @@ class SupplierController extends Controller
             'commercial_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'commercial_license' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'nif_proof' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'pacto_social' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
         ]);
 
         if (isset($validated['activity_type'])) {
@@ -318,7 +351,7 @@ class SupplierController extends Controller
 
         $uploadPath = 'suppliers/documents';
 
-        foreach (['commercial_certificate', 'commercial_license', 'nif_proof'] as $fileKey) {
+        foreach (['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate'] as $fileKey) {
             if ($request->hasFile($fileKey)) {
                 // Delete old file
                 if ($supplier->$fileKey) {

@@ -18,15 +18,17 @@ class QuotationRequestMail extends Mailable
     public $quotation;
     public $supplier;
     public $token;
+    public $senderUser;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(QuotationRequest $quotation, Supplier $supplier, string $token)
+    public function __construct(QuotationRequest $quotation, Supplier $supplier, string $token, $senderUser = null)
     {
         $this->quotation = $quotation;
         $this->supplier = $supplier;
         $this->token = $token;
+        $this->senderUser = $senderUser;
     }
 
     /**
