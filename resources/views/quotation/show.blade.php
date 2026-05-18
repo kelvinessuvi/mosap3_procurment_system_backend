@@ -8,13 +8,18 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <!-- Logo -->
+        <div class="mb-8 text-center">
+            <img src="{{ url('logo.svg') }}" alt="MOSAP3 Logo" class="h-16 mx-auto">
+        </div>
+        
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-8 border-b border-gray-200">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">{{ $quotation->title }}</h1>
-                        <p class="text-sm text-gray-500 mt-1">Ref: {{ $quotation->reference_number }}</p>
+                        <h1 class="text-2xl font-bold text-gray-900">Referência:{{ $quotation->title }}</h1>
+                        <p class="text-sm text-gray-500 mt-1">System ID: {{ $quotation->reference_number }}</p>
                     </div>
                     <div class="text-right">
                         <p class="text-sm text-gray-500">Prazo de Entrega</p>
@@ -43,11 +48,11 @@
                 <ul class="space-y-2">
                     @foreach($quotation->attachments as $index => $attachment)
                     <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition">
-                        <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-[#148742] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         <a href="{{ url('/api/quotation/' . $token . '/attachments/' . $index) }}" 
-                           class="text-blue-600 hover:text-blue-800 text-sm font-medium" 
+                           class="text-[#148742] hover:text-[#0f6631] text-sm font-medium" 
                            target="_blank">
                             {{ $attachment['original_name'] ?? 'Documento ' . ($index + 1) }}
                         </a>
@@ -89,7 +94,7 @@
                 <button onclick="declineQuotation()" class="bg-red-100 text-red-700 px-6 py-3 rounded-md font-medium hover:bg-red-200 transition">
                     Recusar Pedido
                 </button>
-                <button onclick="openSubmissionModal()" class="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition shadow">
+                <button onclick="openSubmissionModal()" class="bg-[#148742] text-white px-6 py-3 rounded-md font-medium hover:bg-[#0f6631] transition shadow">
                     Enviar Proposta
                 </button>
             </div>
@@ -109,27 +114,27 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Data de Entrega</label>
-                            <input type="date" name="delivery_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                            <input type="date" name="delivery_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Dias para Entrega</label>
-                            <input type="number" name="delivery_days" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                            <input type="number" name="delivery_days" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Termos de Pagamento</label>
-                            <input type="text" name="payment_terms" required placeholder="Ex: 50% Adjudicação, 50% Entrega" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                            <input type="text" name="payment_terms" required placeholder="Ex: 50% Adjudicação, 50% Entrega" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
                         </div>
                     </div>
 
 
                     <div>
                          <label class="block text-sm font-medium text-gray-700 mb-1">Anexo (Proposta PDF)</label>
-                         <input type="file" id="proposal_file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                         <input type="file" id="proposal_file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#e7f3ec] file:text-[#148742] hover:file:bg-[#d0e8d9]"/>
                     </div>
 
                     <div class="flex justify-end gap-3 mt-6">
                         <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Enviar Cotação</button>
+                        <button type="submit" class="px-4 py-2 bg-[#148742] text-white rounded-md hover:bg-[#0f6631]">Enviar Cotação</button>
                     </div>
                 </form>
             </div>

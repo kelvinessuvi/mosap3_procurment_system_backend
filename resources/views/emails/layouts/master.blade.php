@@ -36,12 +36,17 @@
         }
         /* Components */
         .header {
-            background-color: #2563eb;
+            background-color: #ffffff;
             padding: 24px;
             text-align: center;
+            border-bottom: 3px solid #FECA02;
+        }
+        .header img {
+            max-height: 70px;
+            margin-bottom: 12px;
         }
         .header h1 {
-            color: #ffffff;
+            color: #148742;
             font-size: 20px;
             font-weight: bold;
             margin: 0;
@@ -68,7 +73,7 @@
         /* Utilities */
         .btn {
             display: inline-block;
-            background-color: #2563eb;
+            background-color: #148742;
             color: #ffffff !important;
             text-decoration: none;
             padding: 12px 24px;
@@ -78,7 +83,7 @@
             text-align: center;
         }
         .btn:hover {
-            background-color: #1d4ed8;
+            background-color: #0f6631;
         }
         .divider {
             border-top: 1px solid #e5e7eb;
@@ -116,6 +121,7 @@
             <div class="card">
                 <!-- Header -->
                 <div class="header">
+                    <img src="{{ url('logo.svg') }}" alt="MOSAP3 Logo">
                     <h1>{{ config('app.name', 'MOSAP3 Procurement') }}</h1>
                 </div>
 

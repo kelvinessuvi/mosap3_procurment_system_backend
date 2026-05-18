@@ -40,6 +40,5 @@
     <div class="divider"></div>
     <p style="margin-bottom:0;">Atenciosamente,<br>
         <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br>
-        <span style="font-size: 14px; color: #6b7280;">Contacto: procurement@mosap3.ao</span>
     </p>
 @endsection
