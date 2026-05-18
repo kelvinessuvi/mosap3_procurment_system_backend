@@ -54,7 +54,6 @@ class ReportsController extends Controller
         $metrics = $this->getMetrics($startDate, $endDate);
         $charts = $this->getCharts($startDate, $endDate, $period);
         $topSuppliers = $this->getTopSuppliers($startDate, $endDate);
-        $topProducts = $this->getTopProducts($startDate, $endDate);
 
         return response()->json([
             'period' => [
@@ -65,25 +64,28 @@ class ReportsController extends Controller
             'metrics' => $metrics,
             'charts' => $charts,
             'top_suppliers' => $topSuppliers,
-            'top_products' => $topProducts
         ]);
     }
 
     private function getMetrics($startDate, $endDate)
     {
-        $acquisitions = \App\Models\Acquisition::whereBetween('created_at', [$startDate, $endDate])
-            ->whereIn('status', ['completed', 'in_progress']);
+        $acquisitions = \App\Models\Acquisition::whereBetween('created_at', [$startDate, $endDate]);
 
-        $totalSpent = $acquisitions->sum('total_amount');
-        $count = $acquisitions->count();
-        $avgTicket = $count > 0 ? $totalSpent / $count : 0;
+        $totalAcquisitions = $acquisitions->whereIn('status', ['completed', 'in_progress'])->count();
+        $completedCount    = \App\Models\Acquisition::whereBetween('created_at', [$startDate, $endDate])->where('status', 'completed')->count();
+        $pendingCount      = \App\Models\Acquisition::whereBetween('created_at', [$startDate, $endDate])->where('status', 'pending')->count();
+
+        $totalQuotations = \App\Models\QuotationRequest::whereBetween('created_at', [$startDate, $endDate])->count();
+        $sentQuotations  = \App\Models\QuotationRequest::whereBetween('created_at', [$startDate, $endDate])->where('status', 'sent')->count();
+        $totalSuppliers  = \App\Models\Supplier::whereBetween('created_at', [$startDate, $endDate])->count();
 
         return [
-            'total_spent' => round($totalSpent, 2),
-            'total_acquisitions' => $count,
-            'avg_ticket' => round($avgTicket, 2),
-            'completed_count' => \App\Models\Acquisition::whereBetween('created_at', [$startDate, $endDate])->where('status', 'completed')->count(),
-            'pending_count' => \App\Models\Acquisition::whereBetween('created_at', [$startDate, $endDate])->where('status', 'pending')->count(),
+            'total_acquisitions' => $totalAcquisitions,
+            'completed_count'    => $completedCount,
+            'pending_count'      => $pendingCount,
+            'total_quotations'   => $totalQuotations,
+            'sent_quotations'    => $sentQuotations,
+            'total_suppliers'    => $totalSuppliers,
         ];
     }
 
@@ -137,32 +139,10 @@ class ReportsController extends Controller
             ->select(
                 'suppliers.id',
                 'suppliers.commercial_name as name',
-                \Illuminate\Support\Facades\DB::raw('COALESCE(SUM(acquisitions.total_amount), 0) as total'),
-                \Illuminate\Support\Facades\DB::raw('COUNT(acquisitions.id) as count')
+                \Illuminate\Support\Facades\DB::raw('COUNT(acquisitions.id) as total_acquisitions')
             )
             ->groupBy('suppliers.id', 'suppliers.commercial_name')
-            ->orderByDesc('total')
-            ->limit(5)
-            ->get();
-    }
-
-    private function getTopProducts($startDate, $endDate)
-    {
-        // Reusing logic from AcquisitionController but simpler summary
-        return \Illuminate\Support\Facades\DB::table('quotation_response_items')
-            ->join('quotation_responses', 'quotation_response_items.quotation_response_id', '=', 'quotation_responses.id')
-            ->join('acquisitions', 'quotation_responses.id', '=', 'acquisitions.quotation_response_id')
-            ->join('quotation_items', 'quotation_response_items.quotation_item_id', '=', 'quotation_items.id')
-            ->leftJoin('products', 'quotation_items.product_id', '=', 'products.id')
-            ->whereBetween('acquisitions.created_at', [$startDate, $endDate])
-            ->select(
-                \Illuminate\Support\Facades\DB::raw('COALESCE(products.name, quotation_items.name) as name'),
-                // Calculate total if null: unit_price * quantity
-                \Illuminate\Support\Facades\DB::raw('SUM(COALESCE(quotation_response_items.total_price, quotation_response_items.unit_price * quotation_items.quantity)) as total'),
-                \Illuminate\Support\Facades\DB::raw('SUM(quotation_items.quantity) as quantity')
-            )
-            ->groupBy('name')
-            ->orderByDesc('total')
+            ->orderByDesc('total_acquisitions')
             ->limit(5)
             ->get();
     }

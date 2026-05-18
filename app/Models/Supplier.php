@@ -15,7 +15,7 @@ class Supplier extends Model
         'legal_name', 'commercial_name', 'email', 'phone', 'nif',
         'activity_type', 'province', 'municipality', 'address',
         'commercial_certificate', 'commercial_license', 'nif_proof',
-        'pacto_social', 'non_debtor_certificate',
+        'pacto_social', 'non_debtor_certificate', 'product_list',
         'is_active', 'user_id'
     ];
 
@@ -24,7 +24,8 @@ class Supplier extends Model
         'commercial_license_url',
         'nif_proof_url',
         'pacto_social_url',
-        'non_debtor_certificate_url'
+        'non_debtor_certificate_url',
+        'product_list_url'
     ];
 
     public function getCommercialCertificateUrlAttribute()
@@ -59,6 +60,13 @@ class Supplier extends Model
     {
         return $this->non_debtor_certificate 
             ? url('/api/suppliers/' . $this->id . '/documents/non_debtor_certificate')
+            : null;
+    }
+
+    public function getProductListUrlAttribute()
+    {
+        return $this->product_list 
+            ? url('/api/suppliers/' . $this->id . '/documents/product_list')
             : null;
     }
 

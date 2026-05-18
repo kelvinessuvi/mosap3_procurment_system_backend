@@ -31,11 +31,6 @@ class QuotationRequest extends Model
         });
     }
 
-    public function items()
-    {
-        return $this->hasMany(QuotationItem::class);
-    }
-
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'quotation_suppliers')

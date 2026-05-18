@@ -36,7 +36,7 @@ class PublicQuotationController extends Controller
      */
     public function show($token)
     {
-        $qs = QuotationSupplier::with(['quotationRequest.items', 'supplier', 'quotationRequest.user'])
+        $qs = QuotationSupplier::with(['quotationRequest', 'supplier', 'quotationRequest.user'])
             ->where('token', $token)
             ->firstOrFail();
 
@@ -63,7 +63,7 @@ class PublicQuotationController extends Controller
      */
     public function viewRequest($token)
     {
-        $qs = QuotationSupplier::with(['quotationRequest.items', 'supplier'])
+        $qs = QuotationSupplier::with(['quotationRequest', 'supplier'])
             ->where('token', $token)
             ->firstOrFail();
 
@@ -94,21 +94,11 @@ class PublicQuotationController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"delivery_date", "delivery_days", "payment_terms", "items"},
+     *                 required={"delivery_date", "delivery_days", "payment_terms"},
      *                 @OA\Property(property="delivery_date", type="string", format="date", example="2026-02-15"),
      *                 @OA\Property(property="delivery_days", type="integer", example=15),
      *                 @OA\Property(property="payment_terms", type="string", example="50% na encomenda, 50% na entrega"),
      *                 @OA\Property(property="observations", type="string", example="Frete incluso"),
-     *                 @OA\Property(
-     *                     property="items",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         required={"quotation_item_id", "unit_price"},
-     *                         @OA\Property(property="quotation_item_id", type="integer", example=1),
-     *                         @OA\Property(property="unit_price", type="number", format="float", example=4500.00),
-     *                         @OA\Property(property="notes", type="string", example="Modelo similar ao solicitado")
-     *                     )
-     *                 ),
      *                 @OA\Property(
      *                     property="proposal_file",
      *                     type="string",
@@ -151,10 +141,6 @@ class PublicQuotationController extends Controller
             'delivery_date' => 'required|date|after:now',
             'delivery_days' => 'required|integer|min:0',
             'payment_terms' => 'required|string',
-            'items' => 'required|array',
-            'items.*.quotation_item_id' => 'required|exists:quotation_items,id',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.notes' => 'nullable|string',
             'proposal_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 
@@ -193,19 +179,6 @@ class PublicQuotationController extends Controller
                 'proposal_document_original_name' => $proposalDocumentOriginalName,
             ]);
 
-            foreach ($validated['items'] as $item) {
-                // Get the quotation item to access quantity
-                $quotationItem = \App\Models\QuotationItem::find($item['quotation_item_id']);
-                $totalPrice = $item['unit_price'] * $quotationItem->quantity;
-                
-                $response->items()->create([
-                    'quotation_item_id' => $item['quotation_item_id'],
-                    'unit_price' => $item['unit_price'],
-                    'total_price' => $totalPrice,
-                    'notes' => $item['notes'] ?? null,
-                ]);
-            }
-
             // Update Status of Invitation
             $qs->update([
                 'status' => 'submitted',
@@ -227,8 +200,8 @@ class PublicQuotationController extends Controller
 
             $response->history()->create([
                 'revision_number' => $revisionNumber,
-                'items_data' => $validated['items'],
-                'total_amount' => collect($validated['items'])->sum('unit_price'), // Simplified total
+                'items_data' => [],
+                'total_amount' => 0,
                 'action' => 'submitted',
                 'action_notes' => 'Proposta submetida pelo fornecedor',
             ]);
@@ -250,7 +223,7 @@ class PublicQuotationController extends Controller
             // Update supplier evaluation metrics
             $this->updateSupplierEvaluation($qs->supplier_id);
 
-            return response()->json($response->load('items'), 201);
+            return response()->json($response->load([]), 201);
         });
     }
 

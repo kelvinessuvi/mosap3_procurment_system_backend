@@ -36,7 +36,7 @@ class DocumentController extends Controller
      *         description="Tipo de documento",
      *         @OA\Schema(
      *             type="string",
-     *             enum={"commercial_certificate", "commercial_license", "nif_proof", "pacto_social", "non_debtor_certificate"}
+     *             enum={"commercial_certificate", "commercial_license", "nif_proof", "pacto_social", "non_debtor_certificate", "product_list"}
      *         )
      *     ),
      *     @OA\Response(
@@ -59,7 +59,11 @@ class DocumentController extends Controller
     public function supplierDocument(Supplier $supplier, string $documentType)
     {
         // Validate document type
-        if (!in_array($documentType, ['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate'])) {
+        $allowedTypes = [
+            'commercial_certificate', 'commercial_license', 'nif_proof',
+            'pacto_social', 'non_debtor_certificate', 'product_list'
+        ];
+        if (!in_array($documentType, $allowedTypes)) {
             abort(404);
         }
 

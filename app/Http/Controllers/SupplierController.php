@@ -104,6 +104,7 @@ class SupplierController extends Controller
       *                 @OA\Property(property="nif_proof", type="string", format="binary", description="Comprovativo de NIF (PDF/JPG/PNG, máx 5MB) — Obrigatório"),
       *                 @OA\Property(property="pacto_social", type="string", format="binary", description="Pacto Social (PDF/JPG/PNG, máx 5MB) — Opcional"),
       *                 @OA\Property(property="non_debtor_certificate", type="string", format="binary", description="Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB) — Opcional"),
+      *                 @OA\Property(property="product_list", type="string", format="binary", description="Lista de Produtos (PDF/JPG/PNG, máx 5MB) — Opcional"),
       *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"), description="IDs das categorias associadas ao fornecedor")
       *             )
       *         )
@@ -123,6 +124,7 @@ class SupplierController extends Controller
       *             @OA\Property(property="nif_proof_url", type="string", nullable=true),
       *             @OA\Property(property="pacto_social_url", type="string", nullable=true),
       *             @OA\Property(property="non_debtor_certificate_url", type="string", nullable=true),
+      *             @OA\Property(property="product_list_url", type="string", nullable=true),
       *             @OA\Property(property="categories", type="array", @OA\Items(type="object"))
       *         )
       *     ),
@@ -155,6 +157,7 @@ class SupplierController extends Controller
             'nif_proof' => 'required|file|mimes:pdf,jpg,png|max:5120',
             'pacto_social' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'non_debtor_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'product_list' => 'nullable|file|mimes:pdf,jpg,png,xlsx,xls|max:5120',
         ]);
 
         // Handle file uploads
@@ -174,6 +177,9 @@ class SupplierController extends Controller
         }
         if ($request->hasFile('non_debtor_certificate')) {
             $validated['non_debtor_certificate'] = $request->file('non_debtor_certificate')->store($uploadPath, 'public');
+        }
+        if ($request->hasFile('product_list')) {
+            $validated['product_list'] = $request->file('product_list')->store($uploadPath, 'public');
         }
 
         // Map activity_type to DB enum
@@ -296,6 +302,7 @@ class SupplierController extends Controller
      *                 @OA\Property(property="nif_proof", type="string", format="binary", description="Comprovativo de NIF (PDF/JPG/PNG, máx 5MB)"),
      *                 @OA\Property(property="pacto_social", type="string", format="binary", description="Pacto Social (PDF/JPG/PNG, máx 5MB)"),
      *                 @OA\Property(property="non_debtor_certificate", type="string", format="binary", description="Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB)"),
+     *                 @OA\Property(property="product_list", type="string", format="binary", description="Lista de Produtos (PDF/JPG/PNG/XLSX, máx 5MB)"),
      *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"), description="IDs das categorias")
      *             )
      *         )
@@ -329,6 +336,7 @@ class SupplierController extends Controller
             'nif_proof' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'pacto_social' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'non_debtor_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'product_list' => 'nullable|file|mimes:pdf,jpg,png,xlsx,xls|max:5120',
         ]);
 
         if (isset($validated['activity_type'])) {
@@ -351,7 +359,7 @@ class SupplierController extends Controller
 
         $uploadPath = 'suppliers/documents';
 
-        foreach (['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate'] as $fileKey) {
+        foreach (['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate', 'product_list'] as $fileKey) {
             if ($request->hasFile($fileKey)) {
                 // Delete old file
                 if ($supplier->$fileKey) {

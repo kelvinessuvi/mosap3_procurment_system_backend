@@ -58,32 +58,6 @@
         </div>
         @endif
 
-        <!-- Items Table -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-lg font-medium text-gray-900">Itens Solicitados</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especificações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($quotation->items as $item)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $item->name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->quantity }} {{ $item->unit }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">{{ $item->description ?? '-' }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
         <!-- Actions -->
         @if($errors->any())
@@ -147,24 +121,6 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4">
-                         @foreach($quotation->items as $index => $item)
-                        <div class="border p-4 rounded bg-gray-50">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $item->name }} ({{ $item->quantity }})</label>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs text-gray-500">Preço Unitário (KZ)</label>
-                                    <input type="number" step="0.01" name="items[{{ $index }}][unit_price]" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                    <input type="hidden" name="items[{{ $index }}][quotation_item_id]" value="{{ $item->id }}">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500">Observações</label>
-                                    <input type="text" name="items[{{ $index }}][notes]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
 
                     <div>
                          <label class="block text-sm font-medium text-gray-700 mb-1">Anexo (Proposta PDF)</label>

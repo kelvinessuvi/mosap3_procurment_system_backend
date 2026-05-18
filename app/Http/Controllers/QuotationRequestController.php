@@ -59,22 +59,10 @@ class QuotationRequestController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"title", "deadline", "items", "suppliers"},
+     *                 required={"title", "deadline", "suppliers"},
      *                 @OA\Property(property="title", type="string", example="Aquisição de Mobiliário", description="Título do pedido de cotação"),
      *                 @OA\Property(property="description", type="string", example="Mobiliário para novo escritório", description="Descrição detalhada do pedido"),
      *                 @OA\Property(property="deadline", type="string", format="date-time", example="2026-02-01 17:00:00", description="Data limite para envio de propostas"),
-     *                 @OA\Property(
-     *                     property="items",
-     *                     type="array",
-     *                     description="Lista de itens solicitados",
-     *                     @OA\Items(
-     *                         required={"name", "quantity", "unit"},
-     *                         @OA\Property(property="name", type="string", example="Cadeira Giratória"),
-     *                         @OA\Property(property="quantity", type="integer", example=10),
-     *                         @OA\Property(property="unit", type="string", example="un"),
-     *                         @OA\Property(property="specifications", type="string", example="Cor preta, ergonômica")
-     *                     )
-     *                 ),
      *                 @OA\Property(property="suppliers", type="array", @OA\Items(type="integer"), example={1, 2}, description="IDs dos fornecedores convidados"),
      *                 @OA\Property(
      *                     property="attachments[]",
@@ -97,7 +85,6 @@ class QuotationRequestController extends Controller
      *                 @OA\Property(property="path", type="string"),
      *                 @OA\Property(property="original_name", type="string")
      *             )),
-     *             @OA\Property(property="items", type="array", @OA\Items(type="object")),
      *             @OA\Property(property="suppliers", type="array", @OA\Items(type="object"))
      *         )
      *     ),
@@ -110,12 +97,6 @@ class QuotationRequestController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'deadline' => 'required|date|after:now',
-            'items' => 'required|array|min:1',
-            'items.*.name' => 'required|string',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit' => 'required|string',
-            'items.*.specifications' => 'nullable|string',
-            'items.*.product_id' => 'nullable|exists:products,id',
             'suppliers' => 'required|array|min:1',
             'suppliers.*' => 'exists:suppliers,id',
             'attachments' => 'nullable|array',
@@ -125,7 +106,7 @@ class QuotationRequestController extends Controller
         return DB::transaction(function () use ($validated, $request) {
             $quotation = QuotationRequest::create([
                 'title' => $validated['title'],
-                'description' => $validated['description'],
+                'description' => $validated['description'] ?? null,
                 'deadline' => $validated['deadline'],
                 'status' => 'draft',
                 'user_id' => $request->user()->id,
@@ -145,27 +126,10 @@ class QuotationRequestController extends Controller
                 $quotation->update(['attachments' => $attachmentPaths]);
             }
 
-            foreach ($validated['items'] as $item) {
-                // Auto-link to product catalog
-                if (!isset($item['product_id'])) {
-                    // Check if product exists by name (case insensitive ideally, but exact for now)
-                    $product = \App\Models\Product::firstOrCreate(
-                        ['name' => $item['name']],
-                        [
-                            'unit' => $item['unit'],
-                            'description' => $item['specifications'] ?? null
-                        ]
-                    );
-                    $item['product_id'] = $product->id;
-                }
-                
-                $quotation->items()->create($item);
-            }
-
             // Attach suppliers (creates pivots with auto-token)
             $quotation->suppliers()->attach($validated['suppliers']);
 
-            return response()->json($quotation->load(['items', 'suppliers']), 201);
+            return response()->json($quotation->load(['suppliers']), 201);
         });
     }
 
@@ -174,7 +138,7 @@ class QuotationRequestController extends Controller
      */
     public function show(QuotationRequest $quotationRequest)
     {
-        return response()->json($quotationRequest->load(['items', 'suppliers', 'user']));
+        return response()->json($quotationRequest->load(['suppliers', 'user']));
     }
 
     /**
