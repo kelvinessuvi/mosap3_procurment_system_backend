@@ -15,6 +15,154 @@
         }
     ],
     "paths": {
+        "/api/acquisitions": {
+            "get": {
+                "tags": [
+                    "Aquisições"
+                ],
+                "summary": "Listar Aquisições",
+                "description": "Lista todas as aquisições com filtros.",
+                "operationId": "0ff44b8f44f4865443d39ae08f05170a",
+                "parameters": [
+                    {
+                        "name": "supplier_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de aquisições"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}/acquisitions": {
+            "get": {
+                "tags": [
+                    "Aquisições"
+                ],
+                "summary": "Histórico de Aquisições do Fornecedor",
+                "operationId": "60134e48e42b17ce73901dac3534c228",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Histórico do fornecedor"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/acquisitions/stats/products": {
+            "get": {
+                "tags": [
+                    "Aquisições"
+                ],
+                "summary": "Produtos Mais Adquiridos",
+                "description": "Retorna ranking de produtos mais comprados por quantidade ou valor total.",
+                "operationId": "400fefbc74e2d90d21a553f0e3ec6b3f",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ranking de produtos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/acquisitions/{acquisition}/confirm-delivery": {
+            "post": {
+                "tags": [
+                    "Aquisições"
+                ],
+                "summary": "Confirmar Entrega de Aquisição",
+                "operationId": "a7bd400d9c8ec8dc35cf4ad0c4bf25cd",
+                "parameters": [
+                    {
+                        "name": "acquisition",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aquisição marcada como completa"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/login": {
             "post": {
                 "tags": [
@@ -332,7 +480,7 @@
                     "Documentos"
                 ],
                 "summary": "Visualizar Documento do Fornecedor",
-                "description": "Retorna o documento do fornecedor (PDF ou imagem). Tipos: commercial_certificate, commercial_license, nif_proof",
+                "description": "Retorna o documento do fornecedor (PDF ou imagem). Tipos disponíveis: commercial_certificate (Certificado Comercial), commercial_license (Alvará Comercial), nif_proof (Comprovativo de NIF), pacto_social (Pacto Social), non_debtor_certificate (Certificado de Não Devedor)",
                 "operationId": "319abccd8618971b60e8aa957f7a04d6",
                 "parameters": [
                     {
@@ -354,7 +502,10 @@
                             "enum": [
                                 "commercial_certificate",
                                 "commercial_license",
-                                "nif_proof"
+                                "nif_proof",
+                                "pacto_social",
+                                "non_debtor_certificate",
+                                "product_list"
                             ]
                         }
                     }
@@ -457,6 +608,341 @@
                 ]
             }
         },
+        "/api/notifications": {
+            "get": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Listar Notificações",
+                "description": "Retorna lista paginada de notificações do usuário autenticado",
+                "operationId": "911565ad9aff9ba7eded3f189509e578",
+                "parameters": [
+                    {
+                        "name": "unread_only",
+                        "in": "query",
+                        "description": "Filtrar apenas não lidas",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrar por tipo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Itens por página",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de notificações",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "message": {
+                                                        "type": "string"
+                                                    },
+                                                    "data": {
+                                                        "type": "object"
+                                                    },
+                                                    "read_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/unread-count": {
+            "get": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Contar Notificações Não Lidas",
+                "operationId": "0272623bed30dd4d72141741fb3f25da",
+                "responses": {
+                    "200": {
+                        "description": "Contagem de não lidas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{id}": {
+            "get": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Detalhes da Notificação",
+                "operationId": "f2edf725f41dd6c9a9338a6a7b39d779",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalhes da notificação"
+                    },
+                    "404": {
+                        "description": "Notificação não encontrada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Deletar Notificação",
+                "operationId": "54c4eb5ec5dc0d1e2916cec2fced1056",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Notificação deletada"
+                    },
+                    "403": {
+                        "description": "Não autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{id}/read": {
+            "post": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Marcar Notificação Como Lida",
+                "operationId": "ccc13a8ee59dfc08e9b1f80e075ebfc1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notificação marcada como lida"
+                    },
+                    "403": {
+                        "description": "Não autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/mark-all-read": {
+            "post": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Marcar Todas Como Lidas",
+                "operationId": "e1e017838e0e1ed1cd321ccf80869335",
+                "responses": {
+                    "200": {
+                        "description": "Todas as notificações foram marcadas como lidas"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products": {
+            "get": {
+                "tags": [
+                    "Catálogo de Produtos"
+                ],
+                "summary": "Listar Produtos",
+                "operationId": "1bfaa78d1c2c3848ab8165c5dadcad3e",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de produtos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Catálogo de Produtos"
+                ],
+                "summary": "Criar Produto",
+                "operationId": "e8185e307706e2cd84bbcf5171e2f09d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "unit"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "unit": {
+                                        "type": "string"
+                                    },
+                                    "category_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Produto criado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/{id}/analytics": {
+            "get": {
+                "tags": [
+                    "Catálogo de Produtos"
+                ],
+                "summary": "Análise de Preços do Produto",
+                "description": "Retorna melhor preço, média e histórico de preços praticados.",
+                "operationId": "1238d9156c14d2f7c5e18d5035bb0844",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados de análise de preço"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/quotation/{token}": {
             "get": {
                 "tags": [
@@ -523,8 +1009,7 @@
                                 "required": [
                                     "delivery_date",
                                     "delivery_days",
-                                    "payment_terms",
-                                    "items"
+                                    "payment_terms"
                                 ],
                                 "properties": {
                                     "delivery_date": {
@@ -543,31 +1028,6 @@
                                     "observations": {
                                         "type": "string",
                                         "example": "Frete incluso"
-                                    },
-                                    "items": {
-                                        "type": "array",
-                                        "items": {
-                                            "required": [
-                                                "quotation_item_id",
-                                                "unit_price"
-                                            ],
-                                            "properties": {
-                                                "quotation_item_id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "unit_price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 4500
-                                                },
-                                                "notes": {
-                                                    "type": "string",
-                                                    "example": "Modelo similar ao solicitado"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
                                     },
                                     "proposal_file": {
                                         "description": "Documento da proposta (PDF, DOC, DOCX - max 10MB)",
@@ -607,6 +1067,52 @@
                 "responses": {
                     "200": {
                         "description": "Participação apenas declinada"
+                    }
+                }
+            }
+        },
+        "/api/quotation/{token}/attachments/{index}": {
+            "get": {
+                "tags": [
+                    "Link Público (Email)"
+                ],
+                "summary": "Descarregar Anexo do Pedido de Cotação",
+                "description": "Permite ao fornecedor descarregar um documento anexado ao pedido de cotação. Acesso via token do email, sem autenticação necessária.",
+                "operationId": "53c31a381e1d8229db1711b8178aaace",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "Token de acesso do fornecedor (enviado por email)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "index",
+                        "in": "path",
+                        "description": "Índice do anexo na lista de documentos (começa em 0)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Documento retornado com sucesso",
+                        "content": {
+                            "application/pdf": {},
+                            "application/msword": {},
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {},
+                            "image/jpeg": {},
+                            "image/png": {}
+                        }
+                    },
+                    "404": {
+                        "description": "Anexo ou ficheiro não encontrado"
                     }
                 }
             }
@@ -666,60 +1172,34 @@
                     "Cotações (Requests)"
                 ],
                 "summary": "Criar novo pedido de cotação",
+                "description": "Cria um novo pedido de cotação com itens, fornecedores convidados e documentos anexados opcionais. O pedido é criado com status 'draft'.",
                 "operationId": "48926bbe3d0e3fa3185d75bb1e414711",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "title",
                                     "deadline",
-                                    "items",
                                     "suppliers"
                                 ],
                                 "properties": {
                                     "title": {
+                                        "description": "Título do pedido de cotação",
                                         "type": "string",
                                         "example": "Aquisição de Mobiliário"
                                     },
                                     "description": {
+                                        "description": "Descrição detalhada do pedido",
                                         "type": "string",
                                         "example": "Mobiliário para novo escritório"
                                     },
                                     "deadline": {
+                                        "description": "Data limite para envio de propostas",
                                         "type": "string",
                                         "format": "date-time",
                                         "example": "2026-02-01 17:00:00"
-                                    },
-                                    "items": {
-                                        "type": "array",
-                                        "items": {
-                                            "required": [
-                                                "name",
-                                                "quantity",
-                                                "unit"
-                                            ],
-                                            "properties": {
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Cadeira Giratória"
-                                                },
-                                                "quantity": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "unit": {
-                                                    "type": "string",
-                                                    "example": "un"
-                                                },
-                                                "specifications": {
-                                                    "type": "string",
-                                                    "example": "Cor preta, ergonômica"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
                                     },
                                     "suppliers": {
                                         "description": "IDs dos fornecedores convidados",
@@ -731,6 +1211,14 @@
                                             1,
                                             2
                                         ]
+                                    },
+                                    "attachments[]": {
+                                        "description": "Documentos anexados ao pedido (PDF, DOC, DOCX, JPG, PNG, XLSX, XLS — máx 10MB cada)",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -740,7 +1228,126 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Criado com sucesso"
+                        "description": "Pedido criado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "reference_number": {
+                                            "type": "string"
+                                        },
+                                        "title": {
+                                            "type": "string"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "draft"
+                                        },
+                                        "attachments": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "path": {
+                                                        "type": "string"
+                                                    },
+                                                    "original_name": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "nullable": true
+                                        },
+                                        "suppliers": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-requests/{id}": {
+            "post": {
+                "tags": [
+                    "Cotações (Requests)"
+                ],
+                "summary": "Atualizar pedido de cotação",
+                "description": "Atualiza um pedido de cotação em rascunho. Permite alterar título, descrição, prazo e adicionar novos documentos anexados. Use _method=PUT para uploads.",
+                "operationId": "f869d44b61a637772996d19e6c50bdc0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do pedido de cotação",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "description": "Necessário para upload de arquivos em PUT",
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
+                                    "title": {
+                                        "description": "Título do pedido",
+                                        "type": "string",
+                                        "example": "Aquisição de Mobiliário"
+                                    },
+                                    "description": {
+                                        "description": "Descrição detalhada",
+                                        "type": "string"
+                                    },
+                                    "deadline": {
+                                        "description": "Novo prazo limite",
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "attachments[]": {
+                                        "description": "Novos documentos a anexar (serão adicionados aos existentes). PDF, DOC, DOCX, JPG, PNG, XLSX, XLS — máx 10MB cada.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pedido atualizado com sucesso"
+                    },
+                    "400": {
+                        "description": "Apenas cotações em rascunho podem ser editadas"
                     },
                     "422": {
                         "description": "Erro de validação"
@@ -1073,6 +1680,57 @@
                 ]
             }
         },
+        "/api/reports/summary": {
+            "get": {
+                "tags": [
+                    "Relatórios"
+                ],
+                "summary": "Relatório Executivo",
+                "description": "Retorna métricas consolidadas por período (semanal, mensal, anual)",
+                "operationId": "5a13a6f0c1345da72a7953fde093ec90",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "monthly",
+                            "enum": [
+                                "weekly",
+                                "monthly",
+                                "yearly"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados do relatório"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/suppliers": {
             "get": {
                 "tags": [
@@ -1149,6 +1807,7 @@
                     "Fornecedores"
                 ],
                 "summary": "Criar novo fornecedor",
+                "description": "Regista um novo fornecedor com dados cadastrais, categorias e documentos obrigatórios/opcionais.",
                 "operationId": "c1ee06af9e1f197a4aa49c1dd74c981c",
                 "requestBody": {
                     "required": true,
@@ -1164,31 +1823,39 @@
                                     "activity_type",
                                     "province",
                                     "municipality",
-                                    "address"
+                                    "address",
+                                    "commercial_certificate",
+                                    "nif_proof"
                                 ],
                                 "properties": {
                                     "legal_name": {
+                                        "description": "Razão social da empresa",
                                         "type": "string",
                                         "example": "Empresa Exemplo SA"
                                     },
                                     "commercial_name": {
+                                        "description": "Nome comercial da empresa",
                                         "type": "string",
                                         "example": "Exemplo Comercial"
                                     },
                                     "email": {
+                                        "description": "Email do fornecedor (único)",
                                         "type": "string",
                                         "format": "email",
                                         "example": "contato@exemplo.ao"
                                     },
                                     "phone": {
+                                        "description": "Telefone de contacto",
                                         "type": "string",
                                         "example": "+244923456789"
                                     },
                                     "nif": {
+                                        "description": "NIF do fornecedor (único)",
                                         "type": "string",
                                         "example": "5001234567"
                                     },
                                     "activity_type": {
+                                        "description": "Tipo de atividade da empresa",
                                         "type": "string",
                                         "enum": [
                                             "Serviços",
@@ -1202,29 +1869,312 @@
                                         ]
                                     },
                                     "province": {
+                                        "description": "Província",
                                         "type": "string",
                                         "example": "Luanda"
                                     },
                                     "municipality": {
+                                        "description": "Município",
                                         "type": "string",
                                         "example": "Belas"
                                     },
                                     "address": {
+                                        "description": "Endereço completo",
                                         "type": "string",
                                         "example": "Rua das Acácias, 12"
                                     },
                                     "commercial_certificate": {
-                                        "description": "Certificado Comercial (PDF/IMG)",
+                                        "description": "Certificado Comercial (PDF/JPG/PNG, máx 5MB) — Obrigatório",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "commercial_license": {
-                                        "description": "Alvará (PDF/IMG)",
+                                        "description": "Alvará Comercial (PDF/JPG/PNG, máx 5MB) — Opcional",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "nif_proof": {
-                                        "description": "Comprovativo NIF (PDF/IMG)",
+                                        "description": "Comprovativo de NIF (PDF/JPG/PNG, máx 5MB) — Obrigatório",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "pacto_social": {
+                                        "description": "Pacto Social (PDF/JPG/PNG, máx 5MB) — Opcional",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "non_debtor_certificate": {
+                                        "description": "Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB) — Opcional",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "product_list": {
+                                        "description": "Lista de Produtos (PDF/JPG/PNG, máx 5MB) — Opcional",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "categories": {
+                                        "description": "IDs das categorias associadas ao fornecedor",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Fornecedor criado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "legal_name": {
+                                            "type": "string"
+                                        },
+                                        "commercial_name": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "nif": {
+                                            "type": "string"
+                                        },
+                                        "is_active": {
+                                            "type": "boolean"
+                                        },
+                                        "commercial_certificate_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "commercial_license_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "nif_proof_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "pacto_social_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "non_debtor_certificate_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "product_list_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "categories": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}/classification": {
+            "get": {
+                "tags": [
+                    "Fornecedores"
+                ],
+                "summary": "Obter Classificação do Fornecedor",
+                "description": "Retorna a classificação (overall_score) e métricas de desempenho do fornecedor",
+                "operationId": "a0a31e3d391b17e6fd3c6bf5bc8e5793",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Classificação recuperada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "supplier_id": {
+                                            "type": "integer"
+                                        },
+                                        "commercial_name": {
+                                            "type": "string"
+                                        },
+                                        "overall_score": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 85.5
+                                        },
+                                        "success_rate": {
+                                            "type": "number",
+                                            "format": "float"
+                                        },
+                                        "response_rate": {
+                                            "type": "number",
+                                            "format": "float"
+                                        },
+                                        "acquisition_rate": {
+                                            "type": "number",
+                                            "format": "float"
+                                        },
+                                        "total_approved": {
+                                            "type": "integer"
+                                        },
+                                        "total_rejected": {
+                                            "type": "integer"
+                                        },
+                                        "total_acquisitions": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Fornecedor ou avaliação não encontrada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}": {
+            "post": {
+                "tags": [
+                    "Fornecedores"
+                ],
+                "summary": "Atualizar fornecedor",
+                "description": "Atualiza dados cadastrais e documentos de um fornecedor existente. Use _method=PUT para uploads de arquivos.",
+                "operationId": "5df412225d4afffa950b1b2dad6c34a9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do fornecedor",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "description": "Necessário para upload de arquivos em PUT",
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
+                                    "legal_name": {
+                                        "description": "Razão social",
+                                        "type": "string"
+                                    },
+                                    "commercial_name": {
+                                        "description": "Nome comercial",
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "description": "Email (único)",
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "phone": {
+                                        "description": "Telefone",
+                                        "type": "string"
+                                    },
+                                    "nif": {
+                                        "description": "NIF (único)",
+                                        "type": "string"
+                                    },
+                                    "activity_type": {
+                                        "description": "Tipo de atividade",
+                                        "type": "string",
+                                        "enum": [
+                                            "Serviços",
+                                            "Comércio Geral"
+                                        ]
+                                    },
+                                    "province": {
+                                        "description": "Província",
+                                        "type": "string"
+                                    },
+                                    "municipality": {
+                                        "description": "Município",
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "description": "Endereço",
+                                        "type": "string"
+                                    },
+                                    "is_active": {
+                                        "description": "Estado ativo/inativo",
+                                        "type": "boolean"
+                                    },
+                                    "commercial_certificate": {
+                                        "description": "Certificado Comercial (PDF/JPG/PNG, máx 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "commercial_license": {
+                                        "description": "Alvará Comercial (PDF/JPG/PNG, máx 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "nif_proof": {
+                                        "description": "Comprovativo de NIF (PDF/JPG/PNG, máx 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "pacto_social": {
+                                        "description": "Pacto Social (PDF/JPG/PNG, máx 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "non_debtor_certificate": {
+                                        "description": "Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "product_list": {
+                                        "description": "Lista de Produtos (PDF/JPG/PNG/XLSX, máx 5MB)",
                                         "type": "string",
                                         "format": "binary"
                                     },
@@ -1242,110 +2192,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Fornecedor criado com sucesso"
-                    },
-                    "422": {
-                        "description": "Erro de validação"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/suppliers/{id}": {
-            "put": {
-                "tags": [
-                    "Fornecedores"
-                ],
-                "summary": "Atualizar fornecedor",
-                "operationId": "837f3815469c658c6255d5037dc09f5c",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "properties": {
-                                    "legal_name": {
-                                        "type": "string"
-                                    },
-                                    "commercial_name": {
-                                        "type": "string"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email"
-                                    },
-                                    "phone": {
-                                        "type": "string"
-                                    },
-                                    "nif": {
-                                        "type": "string"
-                                    },
-                                    "activity_type": {
-                                        "type": "string",
-                                        "enum": [
-                                            "Serviços",
-                                            "Comércio Geral"
-                                        ]
-                                    },
-                                    "province": {
-                                        "type": "string"
-                                    },
-                                    "municipality": {
-                                        "type": "string"
-                                    },
-                                    "address": {
-                                        "type": "string"
-                                    },
-                                    "is_active": {
-                                        "type": "boolean"
-                                    },
-                                    "commercial_certificate": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "commercial_license": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "nif_proof": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "categories": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "_method": {
-                                        "description": "Necessário para upload de arquivos em PUT",
-                                        "type": "string",
-                                        "example": "PUT"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
                     "200": {
-                        "description": "Fornecedor atualizado"
+                        "description": "Fornecedor atualizado com sucesso"
                     },
                     "422": {
                         "description": "Erro de validação"
@@ -1591,6 +2439,10 @@
     },
     "tags": [
         {
+            "name": "Aquisições",
+            "description": "Histórico e Relatórios de Aquisições"
+        },
+        {
             "name": "Categorias",
             "description": "Gestão de Categorias de Produtos/Serviços"
         },
@@ -1607,6 +2459,14 @@
             "description": "Métricas de Desempenho Automatizadas"
         },
         {
+            "name": "Notificações",
+            "description": "Gestão de Notificações In-App"
+        },
+        {
+            "name": "Catálogo de Produtos",
+            "description": "Gestão de Produtos Reutilizáveis"
+        },
+        {
             "name": "Link Público (Email)",
             "description": "Endpoints acessíveis via link enviado por email (Token)"
         },
@@ -1617,6 +2477,10 @@
         {
             "name": "Negociação & Revisão",
             "description": "Gestão de Respostas e Negociações"
+        },
+        {
+            "name": "Relatórios",
+            "description": "Relatórios Gerenciais e Estatísticas"
         },
         {
             "name": "Usuários",

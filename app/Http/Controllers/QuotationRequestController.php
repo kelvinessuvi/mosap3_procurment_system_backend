@@ -93,6 +93,10 @@ class QuotationRequestController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->has('suppliers') && is_string($request->suppliers)) {
+             $request->merge(['suppliers' => explode(',', $request->suppliers)]);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
