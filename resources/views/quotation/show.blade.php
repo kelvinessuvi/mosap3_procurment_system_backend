@@ -10,7 +10,7 @@
     <div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <!-- Logo -->
         <div class="mb-8 text-center">
-            <img src="{{ asset('logo.svg') }}" alt="MOSAP3 Logo" class="h-16 mx-auto">
+            <img src="https://mosap3-api.yetuware.com/logo.svg" alt="MOSAP3 Logo" class="h-16 mx-auto">
         </div>
         
         <!-- Header -->
