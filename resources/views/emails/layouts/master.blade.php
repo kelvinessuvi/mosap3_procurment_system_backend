@@ -121,7 +121,7 @@
             <div class="card">
                 <!-- Header -->
                 <div class="header">
-                    <img src="{{ url('logo.svg') }}" alt="MOSAP3 Logo">
+                    <img src="{{ asset('logo.svg') }}" alt="MOSAP3 Logo">
                     <h1>{{ config('app.name', 'MOSAP3 Procurement') }}</h1>
                 </div>
 
