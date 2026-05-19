@@ -1,7 +1,7 @@
 @extends('emails.layouts.master')
 
 @section('content')
-    <h2 style="text-align: center; color: #111827;">Convite para Cotação</h2>
+    <h2 style="text-align: center; color: #111827;">Pedido de Cotação</h2>
     
     <!--<p>Prezado fornecedor <strong>{{ $supplier->commercial_name }}</strong>,</p>
     
@@ -17,11 +17,15 @@
     <p><strong>Mensagem</strong><br>{{ $quotation->description }}</p>
     @endif
 
-    @if($quotation->attachments && count($quotation->attachments) > 0)
+    @php
+        $docs = is_string($quotation->attachments) ? json_decode($quotation->attachments, true) : $quotation->attachments;
+        $docs = is_array($docs) ? $docs : [];
+    @endphp
+    @if(count($docs) > 0)
     <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 24px 0;">
         <p style="margin: 0 0 8px;"><strong>📎 Documentos Anexados:</strong></p>
         <p style="margin: 0; font-size: 14px; color: #374151;">
-            {{ count($quotation->attachments) }} documento(s) anexado(s). Acesse o link abaixo para visualizar.
+            {{ count($docs) }} documento(s) anexado(s). Acesse o link abaixo para visualizar.
         </p>
     </div>
     @endif

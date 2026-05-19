@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalhes da Cotação - {{ $quotation->reference_number }}</title>
+    <title>Detalhes do Pedido de Cotação - {{ $quotation->title }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -18,7 +18,7 @@
             <div class="px-6 py-8 border-b border-gray-200">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Referência:{{ $quotation->title }}</h1>
+                        <h1 class="text-2xl font-bold text-gray-900">Referência: {{ $quotation->title }}</h1>
                         <p class="text-sm text-gray-500 mt-1">System ID: {{ $quotation->reference_number }}</p>
                     </div>
                     <div class="text-right">
@@ -39,14 +39,18 @@
         </div>
 
         <!-- Attached Documents -->
-        @if($quotation->attachments && count($quotation->attachments) > 0)
+        @php
+            $docs = is_string($quotation->attachments) ? json_decode($quotation->attachments, true) : $quotation->attachments;
+            $docs = is_array($docs) ? $docs : [];
+        @endphp
+        @if(count($docs) > 0)
         <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 class="text-lg font-medium text-gray-900">📎 Documentos Anexados</h3>
             </div>
             <div class="px-6 py-4">
                 <ul class="space-y-2">
-                    @foreach($quotation->attachments as $index => $attachment)
+                    @foreach($docs as $index => $attachment)
                     <li class="flex items-center gap-3 p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition">
                         <svg class="w-5 h-5 text-[#148742] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -54,7 +58,7 @@
                         <a href="{{ url('/api/quotation/' . $token . '/attachments/' . $index) }}" 
                            class="text-[#148742] hover:text-[#0f6631] text-sm font-medium" 
                            target="_blank">
-                            {{ $attachment['original_name'] ?? 'Documento ' . ($index + 1) }}
+                            {{ is_array($attachment) ? ($attachment['original_name'] ?? 'Documento ' . ($index + 1)) : 'Documento ' . ($index + 1) }}
                         </a>
                     </li>
                     @endforeach
