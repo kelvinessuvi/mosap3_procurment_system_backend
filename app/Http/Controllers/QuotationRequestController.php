@@ -199,10 +199,18 @@ class QuotationRequestController extends Controller
             'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240',
         ]);
 
-        // Handle file attachments
-        if ($request->hasFile('attachments')) {
+        // Handle file attachments (Catch all files regardless of key name)
+        $uploadedFiles = [];
+        foreach ($request->allFiles() as $key => $files) {
+            $files = is_array($files) ? $files : [$files];
+            foreach ($files as $file) {
+                $uploadedFiles[] = $file;
+            }
+        }
+
+        if (count($uploadedFiles) > 0) {
             $existingAttachments = $quotationRequest->attachments ?? [];
-            foreach ($request->file('attachments') as $file) {
+            foreach ($uploadedFiles as $file) {
                 $originalName = $file->getClientOriginalName();
                 $path = $file->store('quotation_attachments', 'public');
                 $existingAttachments[] = [
