@@ -116,10 +116,18 @@ class QuotationRequestController extends Controller
                 'user_id' => $request->user()->id,
             ]);
 
-            // Handle file attachments
-            if ($request->hasFile('attachments')) {
+            // Handle file attachments (Catch all files regardless of key name)
+            $uploadedFiles = [];
+            foreach ($request->allFiles() as $key => $files) {
+                $files = is_array($files) ? $files : [$files];
+                foreach ($files as $file) {
+                    $uploadedFiles[] = $file;
+                }
+            }
+
+            if (count($uploadedFiles) > 0) {
                 $attachmentPaths = [];
-                foreach ($request->file('attachments') as $file) {
+                foreach ($uploadedFiles as $file) {
                     $originalName = $file->getClientOriginalName();
                     $path = $file->store('quotation_attachments', 'public');
                     $attachmentPaths[] = [
