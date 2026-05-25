@@ -19,3 +19,6 @@ Route::get('/', function () {
 
 // Rota pública para visualização do pedido de cotação (Link do Email)
 Route::get('/quotation/{token}', [\App\Http\Controllers\PublicQuotationController::class, 'viewRequest']);
+
+// Rota pública para registo de fornecedor (Link do Email)
+Route::get('/supplier/register/{token}', [\App\Http\Controllers\PublicRegistrationController::class, 'showForm']);

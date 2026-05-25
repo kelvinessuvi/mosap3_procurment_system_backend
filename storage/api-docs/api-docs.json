@@ -1117,6 +1117,115 @@
                 }
             }
         },
+        "/api/supplier/register/{token}": {
+            "post": {
+                "tags": [
+                    "Registo Público (Email)"
+                ],
+                "summary": "Completar Registo de Fornecedor",
+                "description": "Permite ao fornecedor preencher os dados e concluir o registo iniciado pelo convite.",
+                "operationId": "25b5c8af93911eabd605638622090e83",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "legal_name",
+                                    "commercial_name",
+                                    "phone",
+                                    "nif",
+                                    "activity_type",
+                                    "province",
+                                    "municipality",
+                                    "commercial_certificate",
+                                    "nif_proof",
+                                    "categories"
+                                ],
+                                "properties": {
+                                    "legal_name": {
+                                        "type": "string"
+                                    },
+                                    "commercial_name": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "nif": {
+                                        "type": "string"
+                                    },
+                                    "activity_type": {
+                                        "type": "string"
+                                    },
+                                    "province": {
+                                        "type": "string"
+                                    },
+                                    "municipality": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "commercial_certificate": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "commercial_license": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "nif_proof": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "pacto_social": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "non_debtor_certificate": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "product_list": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "categories": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Registo concluído com sucesso"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    },
+                    "404": {
+                        "description": "Token inválido"
+                    }
+                }
+            }
+        },
         "/api/quotation-requests": {
             "get": {
                 "tags": [
@@ -2236,6 +2345,82 @@
                 ]
             }
         },
+        "/api/suppliers/invite": {
+            "post": {
+                "tags": [
+                    "Fornecedores"
+                ],
+                "summary": "Convidar Fornecedor para Registo",
+                "description": "Envia um convite por email para o fornecedor se registar na plataforma.",
+                "operationId": "bea7f64b2e667b62e0fc4cf20599454f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "fornecedor@exemplo.ao"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Convite enviado com sucesso"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}/approve": {
+            "post": {
+                "tags": [
+                    "Fornecedores"
+                ],
+                "summary": "Aprovar Fornecedor",
+                "description": "Ativa o fornecedor após o registo ter sido concluído. Apenas admin e técnicos de procurement podem aprovar.",
+                "operationId": "ddc8968a6251a34d18c55b31df413162",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fornecedor aprovado com sucesso"
+                    },
+                    "404": {
+                        "description": "Fornecedor não encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users": {
             "get": {
                 "tags": [
@@ -2469,6 +2654,10 @@
         {
             "name": "Link Público (Email)",
             "description": "Endpoints acessíveis via link enviado por email (Token)"
+        },
+        {
+            "name": "Registo Público (Email)",
+            "description": "Endpoints acessíveis via link de convite enviado por email (Token)"
         },
         {
             "name": "Cotações (Requests)",

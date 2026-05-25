@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Mail\SupplierInvitationMail;
+use App\Mail\SupplierApprovedMail;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -63,6 +67,10 @@ class SupplierController extends Controller
 
         if ($request->filled('is_active')) {
             $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        if ($request->filled('registration_status')) {
+            $query->where('registration_status', $request->registration_status);
         }
 
         if ($request->filled('category_id')) {
@@ -394,5 +402,98 @@ class SupplierController extends Controller
         $supplier->delete();
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/suppliers/invite",
+     *     summary="Convidar Fornecedor para Registo",
+     *     description="Envia um convite por email para o fornecedor se registar na plataforma.",
+     *     tags={"Fornecedores"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email"},
+     *             @OA\Property(property="email", type="string", format="email", example="fornecedor@exemplo.ao")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Convite enviado com sucesso"),
+     *     @OA\Response(response=422, description="Erro de validação")
+     * )
+     */
+    public function invite(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|unique:suppliers,email',
+        ]);
+
+        $supplier = Supplier::create([
+            'legal_name' => 'Pendente',
+            'commercial_name' => 'Pendente',
+            'email' => $validated['email'],
+            'phone' => 'Pendente',
+            'nif' => 'Pendente',
+            'activity_type' => 'service',
+            'province' => 'Pendente',
+            'municipality' => 'Pendente',
+            'is_active' => false,
+            'registration_status' => 'invited',
+            'user_id' => $request->user()->id,
+        ]);
+
+        Mail::to($supplier->email)->send(new SupplierInvitationMail($supplier));
+
+        return response()->json([
+            'message' => 'Convite enviado com sucesso.',
+            'supplier' => $supplier,
+        ], 201);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/suppliers/{id}/approve",
+     *     summary="Aprovar Fornecedor",
+     *     description="Ativa o fornecedor após o registo ter sido concluído. Apenas admin e técnicos de procurement podem aprovar.",
+     *     tags={"Fornecedores"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Fornecedor aprovado com sucesso"),
+     *     @OA\Response(response=404, description="Fornecedor não encontrado")
+     * )
+     */
+    public function approve(Supplier $supplier)
+    {
+        if ($supplier->registration_status !== 'registered') {
+            return response()->json([
+                'message' => 'O fornecedor ainda não concluiu o registo.',
+            ], 422);
+        }
+
+        if ($supplier->is_active) {
+            return response()->json([
+                'message' => 'O fornecedor já está ativo.',
+            ], 422);
+        }
+
+        $supplier->update(['is_active' => true]);
+
+        Mail::to($supplier->email)->send(new SupplierApprovedMail($supplier));
+
+        Notification::create([
+            'user_id' => $supplier->user_id ?? 1,
+            'type' => 'supplier_approved',
+            'title' => 'Fornecedor Aprovado',
+            'message' => "O fornecedor {$supplier->commercial_name} foi aprovado e está agora ativo no sistema.",
+            'data' => [
+                'supplier_id' => $supplier->id,
+                'supplier_name' => $supplier->commercial_name,
+            ],
+        ]);
+
+        return response()->json([
+            'message' => 'Fornecedor aprovado com sucesso.',
+            'supplier' => $supplier,
+        ]);
     }
 }

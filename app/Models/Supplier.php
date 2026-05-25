@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Supplier extends Model
 {
@@ -16,8 +17,24 @@ class Supplier extends Model
         'activity_type', 'province', 'municipality', 'address',
         'commercial_certificate', 'commercial_license', 'nif_proof',
         'pacto_social', 'non_debtor_certificate', 'product_list',
-        'is_active', 'user_id'
+        'is_active', 'user_id',
+        'registration_token', 'registration_status', 'registered_at'
     ];
+
+    protected $casts = [
+        'registered_at' => 'datetime',
+    ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (!$model->registration_token) {
+                $model->registration_token = Str::random(64);
+            }
+        });
+    }
 
     protected $appends = [
         'commercial_certificate_url',

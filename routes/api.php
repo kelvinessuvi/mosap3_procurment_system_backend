@@ -43,6 +43,9 @@ Route::post('/quotation/{token}/submit', [\App\Http\Controllers\PublicQuotationC
 Route::post('/quotation/{token}/decline', [\App\Http\Controllers\PublicQuotationController::class, 'decline']);
 Route::get('/quotation/{token}/attachments/{index}', [\App\Http\Controllers\PublicQuotationController::class, 'downloadAttachment']);
 
+// Public Supplier Registration Routes (Token based)
+Route::post('/supplier/register/{token}', [\App\Http\Controllers\PublicRegistrationController::class, 'register']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -76,6 +79,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Suppliers (Manageable by Admin and Technicians)
     Route::apiResource('suppliers', SupplierController::class);
     Route::get('suppliers/{supplier}/classification', [SupplierController::class, 'classification']);
+    Route::post('suppliers/invite', [SupplierController::class, 'invite']);
+    Route::post('suppliers/{supplier}/approve', [SupplierController::class, 'approve']);
     
     // Document routes (authenticated users can view documents)
     Route::get('suppliers/{supplier}/documents/{documentType}', [\App\Http\Controllers\DocumentController::class, 'supplierDocument']);
