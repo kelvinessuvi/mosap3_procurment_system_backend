@@ -1304,6 +1304,11 @@
                                         "type": "string",
                                         "example": "Mobiliário para novo escritório"
                                     },
+                                    "activity_description": {
+                                        "description": "Descrição da actividade",
+                                        "type": "string",
+                                        "example": "Aquisição de bens e serviços"
+                                    },
                                     "deadline": {
                                         "description": "Data limite para envio de propostas",
                                         "type": "string",
@@ -1350,6 +1355,10 @@
                                         },
                                         "title": {
                                             "type": "string"
+                                        },
+                                        "activity_description": {
+                                            "type": "string",
+                                            "nullable": true
                                         },
                                         "status": {
                                             "type": "string",
@@ -1430,6 +1439,10 @@
                                     },
                                     "description": {
                                         "description": "Descrição detalhada",
+                                        "type": "string"
+                                    },
+                                    "activity_description": {
+                                        "description": "Descrição da actividade",
                                         "type": "string"
                                     },
                                     "deadline": {

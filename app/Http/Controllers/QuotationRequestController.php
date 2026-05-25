@@ -61,8 +61,9 @@ class QuotationRequestController extends Controller
      *             @OA\Schema(
      *                 required={"title", "deadline", "suppliers"},
      *                 @OA\Property(property="title", type="string", example="Aquisição de Mobiliário", description="Título do pedido de cotação"),
-     *                 @OA\Property(property="description", type="string", example="Mobiliário para novo escritório", description="Descrição detalhada do pedido"),
-     *                 @OA\Property(property="deadline", type="string", format="date-time", example="2026-02-01 17:00:00", description="Data limite para envio de propostas"),
+ *                 @OA\Property(property="description", type="string", example="Mobiliário para novo escritório", description="Descrição detalhada do pedido"),
+ *                 @OA\Property(property="activity_description", type="string", example="Aquisição de bens e serviços", description="Descrição da actividade"),
+ *                 @OA\Property(property="deadline", type="string", format="date-time", example="2026-02-01 17:00:00", description="Data limite para envio de propostas"),
      *                 @OA\Property(property="suppliers", type="array", @OA\Items(type="integer"), example={1, 2}, description="IDs dos fornecedores convidados"),
      *                 @OA\Property(
      *                     property="attachments[]",
@@ -79,8 +80,9 @@ class QuotationRequestController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="id", type="integer"),
      *             @OA\Property(property="reference_number", type="string"),
-     *             @OA\Property(property="title", type="string"),
-     *             @OA\Property(property="status", type="string", example="draft"),
+ *             @OA\Property(property="title", type="string"),
+ *             @OA\Property(property="activity_description", type="string", nullable=true),
+ *             @OA\Property(property="status", type="string", example="draft"),
      *             @OA\Property(property="attachments", type="array", nullable=true, @OA\Items(
      *                 @OA\Property(property="path", type="string"),
      *                 @OA\Property(property="original_name", type="string")
@@ -170,8 +172,9 @@ class QuotationRequestController extends Controller
      *             @OA\Schema(
      *                 @OA\Property(property="_method", type="string", example="PUT", description="Necessário para upload de arquivos em PUT"),
      *                 @OA\Property(property="title", type="string", example="Aquisição de Mobiliário", description="Título do pedido"),
-     *                 @OA\Property(property="description", type="string", description="Descrição detalhada"),
-     *                 @OA\Property(property="deadline", type="string", format="date-time", description="Novo prazo limite"),
+ *                 @OA\Property(property="description", type="string", description="Descrição detalhada"),
+ *                 @OA\Property(property="activity_description", type="string", description="Descrição da actividade"),
+ *                 @OA\Property(property="deadline", type="string", format="date-time", description="Novo prazo limite"),
      *                 @OA\Property(
      *                     property="attachments[]",
      *                     type="array",
