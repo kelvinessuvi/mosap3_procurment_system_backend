@@ -18,7 +18,8 @@
             <div class="px-6 py-8 border-b border-gray-200">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Referência: {{ $quotation->title }}</h1>
+                        <h1 class="text-2xl font-bold text-gray-900">Referência PP: {{ $quotation->title }}</h1>
+                        <h2 class="text-2xl font-bold text-gray-900">Descrição da Actividade: {{ $quotation->activity_description }}</h2>
                         <p class="text-sm text-gray-500 mt-1">System ID: {{ $quotation->reference_number }}</p>
                     </div>
                     <div class="text-right">
