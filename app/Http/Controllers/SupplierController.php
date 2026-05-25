@@ -9,7 +9,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 /**
  * @OA\Tag(
@@ -433,7 +433,7 @@ class SupplierController extends Controller
             'commercial_name' => 'Pendente',
             'email' => $validated['email'],
             'phone' => 'Pendente',
-            'nif' => 'Pendente',
+            'nif' => 'TEMP-' . Str::random(8),
             'activity_type' => 'service',
             'province' => 'Pendente',
             'municipality' => 'Pendente',
