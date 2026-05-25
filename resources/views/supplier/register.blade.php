@@ -73,14 +73,8 @@
                         <select name="activity_type" required
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
                             <option value="">Selecione...</option>
-                            <option value="Serviços" @selected(old('activity_type') === 'Serviços')>Serviços</option>
-                            <option value="Comércio Geral" @selected(old('activity_type') === 'Comércio Geral')>Comércio Geral</option>
-                            <option value="Tecnologia" @selected(old('activity_type') === 'Tecnologia')>Tecnologia</option>
-                            <option value="Construção" @selected(old('activity_type') === 'Construção')>Construção</option>
-                            <option value="Consultoria" @selected(old('activity_type') === 'Consultoria')>Consultoria</option>
-                            <option value="Transporte" @selected(old('activity_type') === 'Transporte')>Transporte</option>
-                            <option value="Saúde" @selected(old('activity_type') === 'Saúde')>Saúde</option>
-                            <option value="Outros" @selected(old('activity_type') === 'Outros')>Outros</option>
+                            <option value="service" @selected(old('activity_type') === 'service')>Serviços</option>
+                            <option value="commerce" @selected(old('activity_type') === 'commerce Geral')>Comércio</option>
                         </select>
                     </div>
 
