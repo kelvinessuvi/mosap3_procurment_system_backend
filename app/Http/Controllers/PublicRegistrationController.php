@@ -22,9 +22,11 @@ class PublicRegistrationController extends Controller
      */
     public function showForm($token)
     {
-        $supplier = Supplier::where('registration_token', $token)
-            ->where('registration_status', 'invited')
-            ->firstOrFail();
+        $supplier = Supplier::where('registration_token', $token)->firstOrFail();
+
+        if ($supplier->registration_status === 'registered') {
+            return redirect('/supplier/register/' . $token . '/success');
+        }
 
         $categories = Category::all();
 
@@ -32,6 +34,18 @@ class PublicRegistrationController extends Controller
             'supplier' => $supplier,
             'token' => $token,
             'categories' => $categories,
+        ]);
+    }
+
+    /**
+     * Exibe a página de sucesso após o registo do fornecedor.
+     */
+    public function success($token)
+    {
+        $supplier = Supplier::where('registration_token', $token)->firstOrFail();
+
+        return view('supplier.success', [
+            'supplier' => $supplier,
         ]);
     }
 
@@ -142,7 +156,6 @@ class PublicRegistrationController extends Controller
             ]);
         });
 
-        return redirect('/supplier/register/' . $token)
-            ->with('success', 'Registo concluído com sucesso! Aguarde a aprovação da sua conta por um administrador.');
+        return redirect('/supplier/register/' . $token . '/success');
     }
 }

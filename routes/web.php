@@ -22,3 +22,4 @@ Route::get('/quotation/{token}', [\App\Http\Controllers\PublicQuotationControlle
 
 // Rota pública para registo de fornecedor (Link do Email)
 Route::get('/supplier/register/{token}', [\App\Http\Controllers\PublicRegistrationController::class, 'showForm']);
+Route::get('/supplier/register/{token}/success', [\App\Http\Controllers\PublicRegistrationController::class, 'success']);
