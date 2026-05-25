@@ -6,7 +6,7 @@
         <p style="color: #6b7280;">Sua proposta requer ajustes</p>
     </div>
     
-    <p>Prezado fornecedor,</p>
+    <p>Prezado(a) <strong>{{ $supplier->commercial_name }}</strong>,</p>
     
     <p>Analisamos sua proposta para <strong>{{ $quotation->title }}</strong> e gostaríamos de solicitar uma revisão nos seguintes pontos:</p>
     
@@ -24,5 +24,6 @@
     <p style="margin-top: 24px;">Por favor, envie a revisão o mais breve possível para prosseguirmos com o processo.</p>
     
     <div class="divider"></div>
-    <p style="margin-bottom:0;">Atenciosamente,<br><strong>Equipe de Procurement</strong></p>
+    <p style="margin-bottom:0;">Atenciosamente,<br>
+        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br></p>
 @endsection

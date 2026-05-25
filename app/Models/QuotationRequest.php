@@ -10,7 +10,7 @@ class QuotationRequest extends Model
     use HasFactory;
 
     protected $fillable = [
-        'reference_number', 'title', 'description', 
+        'reference_number', 'title', 'description', 'activity_description',
         'deadline', 'status', 'user_id', 'attachments'
     ];
 

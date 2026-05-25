@@ -3,9 +3,9 @@
 @section('content')
     <h2 style="text-align: center; color: #111827;">Convite para Registro</h2>
 
-    <p>Prezado(a) fornecedor(a),</p>
+    <p>Saudações,</p>
 
-    <p>Você foi convidado(a) a se registrar como fornecedor na plataforma <strong>MOSAP3 Procurement</strong>.</p>
+    <p>É convidado(a) a se registrar como fornecedor/prestador no nosso banco de dados de fornecedores e prestadores.</p>
 
     <p>Clique no botão abaixo para completar o seu cadastro com os dados da sua empresa e documentos necessários.</p>
 
@@ -22,6 +22,6 @@
 
     <div class="divider"></div>
     <p style="margin-bottom:0;">Atenciosamente,<br>
-        <strong>Equipe de Procurement</strong><br>
+        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br>
     </p>
 @endsection

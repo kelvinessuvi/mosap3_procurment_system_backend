@@ -40,8 +40,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                        <input type="email" name="email" value="{{ old('email', $supplier->email) }}" readonly
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed">
+                        <input type="email" name="email" value="{{ old('email', $supplier->email) }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
                     </div>
 
                     <div>

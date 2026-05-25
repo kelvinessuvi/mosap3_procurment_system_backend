@@ -7,7 +7,7 @@
 
     <h2 style="text-align: center; color: #065f46;">Parabéns! Sua proposta foi aprovada.</h2>
     
-    <p>Prezado fornecedor <strong>{{ $supplier->commercial_name }}</strong>,</p>
+    <p>Prezado(a) <strong>{{ $supplier->commercial_name }}</strong>,</p>
     
     <p>Temos o prazer de informar que sua proposta foi selecionada em nosso processo de aquisição.</p>
     
@@ -29,9 +29,9 @@
     <h3>Próximos Passos</h3>
     <ul>
         <li>Nossa equipe entrará em contato em breve para formalizar o pedido.</li>
-        <li>Fique atento para a emissão da Ordem de Compra.</li>
     </ul>
     
     <p style="margin-top: 24px;">Agradecemos pelo excelente trabalho!</p>
-    <p style="margin-bottom:0;">Atenciosamente,<br><strong>Equipe de Procurement</strong></p>
+    <p style="margin-bottom:0;">Atenciosamente,<br>
+        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br></p>
 @endsection

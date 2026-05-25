@@ -100,6 +100,7 @@ class QuotationRequestController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'activity_description' => 'nullable|string',
             'deadline' => 'required|date|after:now',
             'suppliers' => 'required|array|min:1',
             'suppliers.*' => 'exists:suppliers,id',
@@ -111,6 +112,7 @@ class QuotationRequestController extends Controller
             $quotation = QuotationRequest::create([
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
+                'activity_description' => $validated['activity_description'] ?? null,
                 'deadline' => $validated['deadline'],
                 'status' => 'draft',
                 'user_id' => $request->user()->id,
@@ -194,6 +196,7 @@ class QuotationRequestController extends Controller
         $validated = $request->validate([
             'title' => 'string|max:255',
             'description' => 'nullable|string',
+            'activity_description' => 'nullable|string',
             'deadline' => 'date|after:now',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240',
