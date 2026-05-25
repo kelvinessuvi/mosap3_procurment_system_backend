@@ -8,11 +8,10 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="max-w-lg mx-auto bg-white rounded-lg shadow-md p-8 text-center">
-        <div class="text-6xl mb-4">✅</div>
         <h1 class="text-2xl font-bold text-gray-800 mb-3">Registo Concluído!</h1>
         <p class="text-gray-600 mb-6">
-            O seu registo como fornecedor foi enviado com sucesso.<br>
-            Aguarde a aprovação da sua conta por um administrador.
+            O seu registo como fornecedor/prestador foi enviado com sucesso.<br>
+            Por favor aguarde pela verificação.
         </p>
         <p class="text-sm text-gray-400">Pode fechar esta página.</p>
     </div>
