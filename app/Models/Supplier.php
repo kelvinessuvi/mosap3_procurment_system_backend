@@ -14,7 +14,7 @@ class Supplier extends Model
     use HasFactory, SoftDeletes, Auditable;
 
     protected $fillable = [
-        'legal_name', 'commercial_name', 'email', 'phone', 'nif',
+        'legal_name', 'commercial_name', 'email', 'phone', 'alt_phone', 'nif',
         'activity_type', 'province', 'municipality', 'address',
         'commercial_certificate', 'commercial_license', 'nif_proof',
         'pacto_social', 'non_debtor_certificate', 'product_list',

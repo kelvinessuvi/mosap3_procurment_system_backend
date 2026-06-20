@@ -100,6 +100,7 @@ class PublicRegistrationController extends Controller
             'legal_name' => 'required|string|max:255',
             'commercial_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
+            'alt_phone' => 'nullable|string|max:20',
             'nif' => 'required|string|unique:suppliers,nif,' . $supplier->id,
             'activity_type' => 'required|string',
             'province' => 'required|string',

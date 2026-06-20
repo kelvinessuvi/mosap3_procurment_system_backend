@@ -2073,6 +2073,11 @@
                                         "type": "string",
                                         "example": "+244923456789"
                                     },
+                                    "alt_phone": {
+                                        "description": "Telefone alternativo",
+                                        "type": "string",
+                                        "example": "+244923456788"
+                                    },
                                     "nif": {
                                         "description": "NIF do fornecedor (único)",
                                         "type": "string",

@@ -17,6 +17,7 @@ class SupplierFactory extends Factory
             'commercial_name' => $this->faker->companySuffix,
             'email' => $this->faker->unique()->companyEmail,
             'phone' => $this->faker->phoneNumber,
+            'alt_phone' => $this->faker->phoneNumber,
             'nif' => $this->faker->unique()->numerify('#########'),
             'activity_type' => $this->faker->randomElement(['service', 'commerce']),
             'province' => $this->faker->state,
