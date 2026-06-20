@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\QuotationRequestMail;
+use App\Models\AuditLog;
 use App\Models\QuotationRequest;
 use App\Models\QuotationSupplier;
 use Illuminate\Http\Request;
@@ -295,6 +296,13 @@ class QuotationRequestController extends Controller
 
         $quotationRequest->update(['status' => 'sent']);
 
+        AuditLog::log('Envio de cotação', "Cotação #{$quotationRequest->reference_number} foi enviada para {$quotationSuppliers->count()} fornecedor(es)", [
+            'quotation_request_id' => $quotationRequest->id,
+            'reference_number' => $quotationRequest->reference_number,
+            'suppliers_count' => $quotationSuppliers->count(),
+            'supplier_ids' => $quotationSuppliers->pluck('supplier_id'),
+        ], $request->user());
+
         return response()->json(['message' => 'Cotação enviada para ' . $quotationSuppliers->count() . ' fornecedores.']);
     }
 
@@ -308,10 +316,16 @@ class QuotationRequestController extends Controller
      *     @OA\Response(response=200, description="Cancelado com sucesso")
      * )
      */
-    public function cancel(QuotationRequest $quotationRequest)
+    public function cancel(Request $request, QuotationRequest $quotationRequest)
     {
         // Logic to cancel
         $quotationRequest->update(['status' => 'cancelled']);
+
+        AuditLog::log('Cancelamento de cotação', "Cotação #{$quotationRequest->reference_number} foi cancelada", [
+            'quotation_request_id' => $quotationRequest->id,
+            'reference_number' => $quotationRequest->reference_number,
+        ], $request->user());
+
         return response()->json(['message' => 'Cotação cancelada.']);
     }
 }

@@ -115,5 +115,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('suppliers/{id}/evaluation', [\App\Http\Controllers\EvaluationController::class, 'show']);
         Route::post('suppliers/{id}/evaluation/recalculate', [\App\Http\Controllers\EvaluationController::class, 'recalculate']);
         Route::post('supplier-evaluations/recalculate-all', [\App\Http\Controllers\EvaluationController::class, 'recalculateAll']);
+
+        // Audit Logs
+        Route::get('audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index']);
+        Route::get('audit-logs/{auditLog}', [\App\Http\Controllers\AuditLogController::class, 'show']);
     });
 });

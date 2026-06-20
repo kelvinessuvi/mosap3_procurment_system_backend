@@ -6,6 +6,7 @@ use App\Mail\NegotiationNotificationMail;
 use App\Mail\ProposalApprovedMail;
 use App\Mail\ProposalRejectedMail;
 use App\Models\Acquisition;
+use App\Models\AuditLog;
 use App\Models\NegotiationNotification;
 use App\Models\Notification;
 use App\Models\QuotationResponse;
@@ -100,6 +101,13 @@ class QuotationResponseController extends Controller
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
             ->send(new ProposalApprovedMail($quotationResponse));
 
+        AuditLog::log('Aprovação de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi aprovada", [
+            'quotation_response_id' => $quotationResponse->id,
+            'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
+            'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name,
+            'quotation_request_id' => $quotationResponse->quotationSupplier->quotation_request_id,
+        ], $request->user());
+
         // Create notification for quotation request creator
         Notification::create([
             'user_id' => $quotationResponse->quotationSupplier->quotationRequest->user_id,
@@ -148,6 +156,14 @@ class QuotationResponseController extends Controller
         $quotationResponse->load('quotationSupplier.supplier', 'quotationSupplier.quotationRequest');
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
             ->send(new ProposalRejectedMail($quotationResponse));
+
+        AuditLog::log('Rejeição de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi rejeitada", [
+            'quotation_response_id' => $quotationResponse->id,
+            'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
+            'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name,
+            'quotation_request_id' => $quotationResponse->quotationSupplier->quotation_request_id,
+            'notes' => $validated['notes'] ?? null,
+        ], $request->user());
 
         // Create notification for quotation request creator
         Notification::create([
@@ -242,6 +258,15 @@ class QuotationResponseController extends Controller
             
             $this->updateSupplierStatistics($qs->supplier_id);
 
+            AuditLog::log('Pedido de revisão', "Revisão solicitada para proposta #{$quotationResponse->id} do fornecedor {$qs->supplier->commercial_name}", [
+                'quotation_response_id' => $quotationResponse->id,
+                'supplier_id' => $qs->supplier_id,
+                'supplier_name' => $qs->supplier->commercial_name,
+                'quotation_request_id' => $qs->quotation_request_id,
+                'reason' => $validated['reason'],
+                'message' => $validated['message'],
+            ], auth()->user());
+
             // Create notification for quotation request creator
             Notification::create([
                 'user_id' => $qs->quotationRequest->user_id,
@@ -315,8 +340,16 @@ class QuotationResponseController extends Controller
             ]);
 
             $quotationResponse->quotationSupplier->quotationRequest->update(['status' => 'completed']);
-            
+
             $this->updateSupplierStatistics($quotationResponse->quotationSupplier->supplier_id);
+
+            AuditLog::log('Criação de aquisição', "Aquisição #{$acquisition->reference_number} gerada a partir da proposta #{$quotationResponse->id}", [
+                'acquisition_id' => $acquisition->id,
+                'reference_number' => $acquisition->reference_number,
+                'quotation_response_id' => $quotationResponse->id,
+                'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
+                'total_amount' => $totalAmount,
+            ], auth()->user());
 
             return response()->json($acquisition, 201);
         });

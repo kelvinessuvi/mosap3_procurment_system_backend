@@ -163,6 +163,108 @@
                 ]
             }
         },
+        "/api/audit-logs": {
+            "get": {
+                "tags": [
+                    "Auditoria"
+                ],
+                "summary": "Listar logs de auditoria",
+                "description": "Retorna a lista paginada de logs de auditoria com filtros opcionais.",
+                "operationId": "9e62b5f5a6a0c15d4ae6dd3932622142",
+                "parameters": [
+                    {
+                        "name": "event",
+                        "in": "query",
+                        "description": "Filtrar por evento",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filtrar por utilizador",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Data início (Y-m-d)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Data fim (Y-m-d)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Resultados por página",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de logs"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/audit-logs/{id}": {
+            "get": {
+                "tags": [
+                    "Auditoria"
+                ],
+                "summary": "Detalhe do log de auditoria",
+                "operationId": "0d6d7c056e441ba591f9ac48024e1c65",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Log encontrado"
+                    },
+                    "404": {
+                        "description": "Não encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/login": {
             "post": {
                 "tags": [
@@ -2639,6 +2741,10 @@
         {
             "name": "Aquisições",
             "description": "Histórico e Relatórios de Aquisições"
+        },
+        {
+            "name": "Auditoria",
+            "description": "Registo de auditoria do sistema (Apenas Admin)"
         },
         {
             "name": "Categorias",

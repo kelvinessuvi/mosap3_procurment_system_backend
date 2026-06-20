@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\AuditLog;
 use App\Models\QuotationResponse;
 use App\Models\QuotationSupplier;
 use Illuminate\Http\Request;
@@ -223,6 +224,14 @@ class PublicQuotationController extends Controller
             // Update supplier evaluation metrics
             $this->updateSupplierEvaluation($qs->supplier_id);
 
+            AuditLog::log('Submissão de proposta', "Fornecedor '{$qs->supplier->commercial_name}' submeteu proposta para cotação #{$qs->quotationRequest->id}", [
+                'quotation_request_id' => $qs->quotationRequest->id,
+                'quotation_supplier_id' => $qs->id,
+                'supplier_id' => $qs->supplier_id,
+                'supplier_name' => $qs->supplier->commercial_name,
+                'revision_number' => $revisionNumber,
+            ]);
+
             return response()->json($response->load([]), 201);
         });
     }
@@ -253,6 +262,13 @@ class PublicQuotationController extends Controller
                 'supplier_id' => $qs->supplier_id,
                 'supplier_name' => $qs->supplier->commercial_name
             ]
+        ]);
+
+        AuditLog::log('Declínio de cotação', "Fornecedor '{$qs->supplier->commercial_name}' declinou cotação #{$qs->quotationRequest->id}", [
+            'quotation_request_id' => $qs->quotationRequest->id,
+            'quotation_supplier_id' => $qs->id,
+            'supplier_id' => $qs->supplier_id,
+            'supplier_name' => $qs->supplier->commercial_name,
         ]);
 
         return response()->json(['message' => 'Participação declinada.']);

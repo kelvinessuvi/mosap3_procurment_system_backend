@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Supplier;
 use App\Mail\SupplierInvitationMail;
 use App\Mail\SupplierApprovedMail;
+use App\Models\AuditLog;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -445,6 +446,11 @@ class SupplierController extends Controller
 
         Mail::to($supplier->email)->send(new SupplierInvitationMail($supplier));
 
+        AuditLog::log('Convite para registo', "Fornecedor '{$supplier->email}' foi convidado para se registar", [
+            'supplier_id' => $supplier->id,
+            'email' => $supplier->email,
+        ], $request->user());
+
         return response()->json([
             'message' => 'Convite enviado com sucesso.',
             'supplier' => $supplier,
@@ -480,6 +486,13 @@ class SupplierController extends Controller
         $supplier->update(['is_active' => true]);
 
         Mail::to($supplier->email)->send(new SupplierApprovedMail($supplier));
+
+        AuditLog::log('Aprovação de fornecedor', "Fornecedor '{$supplier->commercial_name}' foi aprovado e ativado", [
+            'supplier_id' => $supplier->id,
+            'supplier_name' => $supplier->commercial_name,
+            'email' => $supplier->email,
+            'registration_status' => $supplier->registration_status,
+        ], request()->user());
 
         Notification::create([
             'user_id' => $supplier->user_id ?? 1,

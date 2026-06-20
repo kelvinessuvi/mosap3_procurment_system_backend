@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Supplier;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -149,6 +150,13 @@ class PublicRegistrationController extends Controller
             if ($request->has('categories')) {
                 $supplier->categories()->sync($request->categories);
             }
+
+            AuditLog::log('Auto-registo de fornecedor', "Fornecedor '{$supplier->email}' completou o auto-registo", [
+                'supplier_id' => $supplier->id,
+                'email' => $supplier->email,
+                'commercial_name' => $validated['commercial_name'] ?? null,
+                'nif' => $validated['nif'] ?? null,
+            ]);
 
             Log::info('Supplier registered via self-registration', [
                 'supplier_id' => $supplier->id,

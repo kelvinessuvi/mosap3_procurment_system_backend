@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -65,6 +66,11 @@ class AuthController extends Controller
         
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        AuditLog::log('Login', "Utilizador '{$user->name}' fez login", [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ], $user);
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
@@ -84,7 +90,13 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+
+        AuditLog::log('Logout', "Utilizador '{$user->name}' terminou sessão", [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ], $user);
 
         return response()->json(['message' => 'Sessão terminada com sucesso.']);
     }

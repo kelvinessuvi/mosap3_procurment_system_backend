@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Acquisition;
+use App\Models\AuditLog;
 use App\Models\Notification;
 use App\Models\QuotationItem;
 use Illuminate\Http\Request;
@@ -140,6 +141,12 @@ class AcquisitionController extends Controller
             'status' => 'completed',
             'actual_delivery_date' => now()
         ]);
+
+        AuditLog::log('Confirmação de entrega', "Aquisição #{$acquisition->reference_number} teve entrega confirmada", [
+            'acquisition_id' => $acquisition->id,
+            'reference_number' => $acquisition->reference_number,
+            'supplier_id' => $acquisition->supplier_id,
+        ], $request->user());
 
         // Notify the requester
         $acquisition->load('quotationRequest');
