@@ -22,9 +22,25 @@ trait Auditable
         });
     }
 
+    protected static function getModelLabel($model)
+    {
+        $map = [
+            'Supplier' => 'Fornecedor',
+            'User' => 'Utilizador',
+            'QuotationRequest' => 'Pedido de Cotação',
+            'QuotationResponse' => 'Resposta de Cotação',
+            'Acquisition' => 'Aquisição',
+            'Category' => 'Categoria',
+            'Product' => 'Produto',
+        ];
+
+        $className = class_basename($model);
+        return $map[$className] ?? $className;
+    }
+
     protected static function logAudit($action, $model)
     {
-        $modelName = class_basename($model);
+        $modelName = static::getModelLabel($model);
         $user = Auth::user();
 
         $details = [
