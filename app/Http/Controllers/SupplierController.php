@@ -99,8 +99,7 @@ class SupplierController extends Controller
       *             mediaType="multipart/form-data",
       *             @OA\Schema(
        *                 required={"company_name", "email", "phone", "nif", "activity_type", "province", "municipality", "address", "commercial_certificate", "nif_proof"},
-       *                 @OA\Property(property="company_name", type="string", example="Empresa Exemplo SA", description="Nome da empresa"),
-       *                 @OA\Property(property="company_name", type="string", example="Exemplo Comercial", description="Nome da empresa"),
+      *                 @OA\Property(property="company_name", type="string", example="Empresa Exemplo SA", description="Nome da empresa"),
       *                 @OA\Property(property="email", type="string", format="email", example="contato@exemplo.ao", description="Email do fornecedor (único)"),
  *                 @OA\Property(property="phone", type="string", example="+244923456789", description="Telefone de contacto"),
  *                 @OA\Property(property="alt_phone", type="string", example="+244923456788", description="Telefone alternativo"),
