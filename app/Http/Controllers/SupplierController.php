@@ -154,7 +154,7 @@ class SupplierController extends Controller
             'alt_phone' => 'nullable|string|max:20',
             'nif' => 'required|string|unique:suppliers',
             // Update to match Swagger enums or accept both. Let's make it flexible.
-            'activity_type' => 'required|string', 
+            'activity_type' => 'string', 
             'province' => 'required|string',
             'municipality' => 'required|string',
             'address' => 'nullable|string',
