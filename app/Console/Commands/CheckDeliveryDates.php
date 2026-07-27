@@ -53,7 +53,7 @@ class CheckDeliveryDates extends Command
 
             if ($deliveryDate->isToday()) {
                 $title = 'Entrega Hoje!';
-                $message = "A entrega do pedido #{$acquisition->reference_number} pelo fornecedor {$acquisition->supplier->commercial_name} está prevista para HOJE.";
+                $message = "A entrega do pedido #{$acquisition->reference_number} pelo fornecedor {$acquisition->supplier->company_name} está prevista para HOJE.";
             } elseif ($deliveryDate->isTomorrow()) {
                 $title = 'Entrega Amanhã';
                 $message = "A entrega do pedido #{$acquisition->reference_number} está prevista para AMANHÃ.";
@@ -81,7 +81,7 @@ class CheckDeliveryDates extends Command
                     'data' => [
                         'acquisition_id' => $acquisition->id,
                         'reference_number' => $acquisition->reference_number,
-                        'supplier_name' => $acquisition->supplier->commercial_name,
+                        'supplier_name' => $acquisition->supplier->company_name,
                         'expected_delivery_date' => $acquisition->expected_delivery_date->format('Y-m-d')
                     ]
                 ]);

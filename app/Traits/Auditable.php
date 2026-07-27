@@ -54,7 +54,7 @@ trait Auditable
             unset($attributes['password'], $attributes['remember_token']);
             $details['new_values'] = $attributes;
 
-            $name = $model->name ?? $model->legal_name ?? $model->commercial_name ?? $model->title ?? $model->email ?? "#{$model->id}";
+            $name = $model->name ?? $model->company_name ?? $model->title ?? $model->email ?? "#{$model->id}";
             $description = "{$modelName} '{$name}' foi criado(a)";
         }
 
@@ -74,7 +74,7 @@ trait Auditable
             }
             $details['changes'] = $changedFields;
 
-            $name = $model->name ?? $model->legal_name ?? $model->commercial_name ?? $model->title ?? $model->email ?? "#{$model->id}";
+            $name = $model->name ?? $model->company_name ?? $model->title ?? $model->email ?? "#{$model->id}";
             $fields = implode(', ', array_keys($changedFields));
             $description = "{$modelName} '{$name}' foi atualizado(a): {$fields}";
         }
@@ -84,7 +84,7 @@ trait Auditable
             unset($attributes['password'], $attributes['remember_token']);
             $details['deleted_values'] = $attributes;
 
-            $name = $model->name ?? $model->legal_name ?? $model->commercial_name ?? $model->title ?? $model->email ?? "#{$model->id}";
+            $name = $model->name ?? $model->company_name ?? $model->title ?? $model->email ?? "#{$model->id}";
             $description = "{$modelName} '{$name}' foi excluído(a)";
         }
 

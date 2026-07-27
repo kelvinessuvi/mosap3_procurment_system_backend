@@ -3,7 +3,7 @@
 @section('content')
     <h2 style="text-align: center; color: #ef4444;">Atualização sobre sua Proposta</h2>
     
-    <p>Prezado(a) <strong>{{ $supplier->commercial_name }}</strong>,</p>
+    <p>Prezado(a) <strong>{{ $supplier->company_name }}</strong>,</p>
     
     <p>Agradecemos imensamente seu interesse e o envio da proposta para nossa solicitação.</p>
     
@@ -25,5 +25,7 @@
     
     <p>Valorizamos sua parceria e manteremos seus dados para futuros processos de compras.</p>
     <p style="margin-bottom:0;">Atenciosamente,<br>
-        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br></p>
+        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br>
+        <strong>procurement@mosap3.ao</strong><br>
+    </p>
 @endsection

@@ -62,9 +62,8 @@ class PublicRegistrationController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"legal_name", "commercial_name", "phone", "nif", "activity_type", "province", "municipality", "commercial_certificate", "nif_proof", "categories"},
-     *                 @OA\Property(property="legal_name", type="string"),
-     *                 @OA\Property(property="commercial_name", type="string"),
+      *                 required={"company_name", "phone", "nif", "activity_type", "province", "municipality", "commercial_certificate", "nif_proof", "categories"},
+      *                 @OA\Property(property="company_name", type="string"),
      *                 @OA\Property(property="phone", type="string"),
      *                 @OA\Property(property="nif", type="string"),
      *                 @OA\Property(property="activity_type", type="string"),
@@ -75,7 +74,8 @@ class PublicRegistrationController extends Controller
      *                 @OA\Property(property="commercial_license", type="string", format="binary"),
      *                 @OA\Property(property="nif_proof", type="string", format="binary"),
      *                 @OA\Property(property="pacto_social", type="string", format="binary"),
-     *                 @OA\Property(property="non_debtor_certificate", type="string", format="binary"),
+      *                 @OA\Property(property="non_debtor_certificate_agt", type="string", format="binary"),
+      *                 @OA\Property(property="non_debtor_certificate_inss", type="string", format="binary"),
      *                 @OA\Property(property="product_list", type="string", format="binary"),
      *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"))
      *             )
@@ -97,8 +97,7 @@ class PublicRegistrationController extends Controller
         }
 
         $validated = $request->validate([
-            'legal_name' => 'required|string|max:255',
-            'commercial_name' => 'required|string|max:255',
+            'company_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'alt_phone' => 'nullable|string|max:20',
             'nif' => 'required|string|unique:suppliers,nif,' . $supplier->id,
@@ -113,7 +112,8 @@ class PublicRegistrationController extends Controller
             'commercial_license' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'nif_proof' => 'required|file|mimes:pdf,jpg,png|max:5120',
             'pacto_social' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
-            'non_debtor_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate_agt' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate_inss' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'product_list' => 'nullable|file|mimes:pdf,jpg,png,xlsx,xls|max:5120',
         ]);
 
@@ -135,7 +135,7 @@ class PublicRegistrationController extends Controller
 
         $uploadPath = 'suppliers/documents';
 
-        foreach (['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate', 'product_list'] as $fileKey) {
+        foreach (['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate_agt', 'non_debtor_certificate_inss', 'product_list'] as $fileKey) {
             if ($request->hasFile($fileKey)) {
                 $validated[$fileKey] = $request->file($fileKey)->store($uploadPath, 'public');
             }
@@ -155,7 +155,7 @@ class PublicRegistrationController extends Controller
             AuditLog::log('Auto-registo de fornecedor', "Fornecedor '{$supplier->email}' completou o auto-registo", [
                 'supplier_id' => $supplier->id,
                 'email' => $supplier->email,
-                'commercial_name' => $validated['commercial_name'] ?? null,
+                'company_name' => $validated['company_name'] ?? null,
                 'nif' => $validated['nif'] ?? null,
             ]);
 

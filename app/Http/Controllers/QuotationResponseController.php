@@ -101,10 +101,10 @@ class QuotationResponseController extends Controller
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
             ->send(new ProposalApprovedMail($quotationResponse));
 
-        AuditLog::log('Aprovação de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi aprovada", [
+        AuditLog::log('Aprovação de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->company_name} foi aprovada", [
             'quotation_response_id' => $quotationResponse->id,
             'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
-            'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name,
+            'supplier_name' => $quotationResponse->quotationSupplier->supplier->company_name,
             'quotation_request_id' => $quotationResponse->quotationSupplier->quotation_request_id,
         ], $request->user());
 
@@ -113,12 +113,12 @@ class QuotationResponseController extends Controller
             'user_id' => $quotationResponse->quotationSupplier->quotationRequest->user_id,
             'type' => 'proposal_approved',
             'title' => 'Proposta Aprovada',
-            'message' => "A proposta do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi aprovada para a cotação #{$quotationResponse->quotationSupplier->quotationRequest->id}",
+            'message' => "A proposta do fornecedor {$quotationResponse->quotationSupplier->supplier->company_name} foi aprovada para a cotação #{$quotationResponse->quotationSupplier->quotationRequest->id}",
             'data' => [
                 'quotation_request_id' => $quotationResponse->quotationSupplier->quotationRequest->id,
                 'quotation_response_id' => $quotationResponse->id,
                 'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
-                'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name
+                'supplier_name' => $quotationResponse->quotationSupplier->supplier->company_name
             ]
         ]);
 
@@ -157,10 +157,10 @@ class QuotationResponseController extends Controller
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
             ->send(new ProposalRejectedMail($quotationResponse));
 
-        AuditLog::log('Rejeição de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi rejeitada", [
+        AuditLog::log('Rejeição de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->company_name} foi rejeitada", [
             'quotation_response_id' => $quotationResponse->id,
             'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
-            'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name,
+            'supplier_name' => $quotationResponse->quotationSupplier->supplier->company_name,
             'quotation_request_id' => $quotationResponse->quotationSupplier->quotation_request_id,
             'notes' => $validated['notes'] ?? null,
         ], $request->user());
@@ -170,12 +170,12 @@ class QuotationResponseController extends Controller
             'user_id' => $quotationResponse->quotationSupplier->quotationRequest->user_id,
             'type' => 'proposal_rejected',
             'title' => 'Proposta Rejeitada',
-            'message' => "A proposta do fornecedor {$quotationResponse->quotationSupplier->supplier->commercial_name} foi rejeitada para a cotação #{$quotationResponse->quotationSupplier->quotationRequest->id}",
+            'message' => "A proposta do fornecedor {$quotationResponse->quotationSupplier->supplier->company_name} foi rejeitada para a cotação #{$quotationResponse->quotationSupplier->quotationRequest->id}",
             'data' => [
                 'quotation_request_id' => $quotationResponse->quotationSupplier->quotationRequest->id,
                 'quotation_response_id' => $quotationResponse->id,
                 'supplier_id' => $quotationResponse->quotationSupplier->supplier_id,
-                'supplier_name' => $quotationResponse->quotationSupplier->supplier->commercial_name
+                'supplier_name' => $quotationResponse->quotationSupplier->supplier->company_name
             ]
         ]);
 
@@ -258,10 +258,10 @@ class QuotationResponseController extends Controller
             
             $this->updateSupplierStatistics($qs->supplier_id);
 
-            AuditLog::log('Pedido de revisão', "Revisão solicitada para proposta #{$quotationResponse->id} do fornecedor {$qs->supplier->commercial_name}", [
+            AuditLog::log('Pedido de revisão', "Revisão solicitada para proposta #{$quotationResponse->id} do fornecedor {$qs->supplier->company_name}", [
                 'quotation_response_id' => $quotationResponse->id,
                 'supplier_id' => $qs->supplier_id,
-                'supplier_name' => $qs->supplier->commercial_name,
+                'supplier_name' => $qs->supplier->company_name,
                 'quotation_request_id' => $qs->quotation_request_id,
                 'reason' => $validated['reason'],
                 'message' => $validated['message'],
@@ -272,12 +272,12 @@ class QuotationResponseController extends Controller
                 'user_id' => $qs->quotationRequest->user_id,
                 'type' => 'revision_requested',
                 'title' => 'Revisão Solicitada',
-                'message' => "Uma revisão foi solicitada para a proposta do fornecedor {$qs->supplier->commercial_name} na cotação #{$qs->quotationRequest->id}",
+                'message' => "Uma revisão foi solicitada para a proposta do fornecedor {$qs->supplier->company_name} na cotação #{$qs->quotationRequest->id}",
                 'data' => [
                     'quotation_request_id' => $qs->quotationRequest->id,
                     'quotation_response_id' => $quotationResponse->id,
                     'supplier_id' => $qs->supplier_id,
-                    'supplier_name' => $qs->supplier->commercial_name,
+                    'supplier_name' => $qs->supplier->company_name,
                     'reason' => $validated['reason']
                 ]
             ]);

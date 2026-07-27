@@ -121,7 +121,7 @@
             <div class="card">
                 <!-- Header -->
                 <div class="header">
-                    <img src="https://mosap3-api.yetuware.com/logo.svg" alt="MOSAP3 Logo">
+                    <img src="https://api.mosap3.yetuware.it.ao/logo.svg" alt="MOSAP3 Logo">
                     <!--<h1>{{ config('app.name', 'MOSAP3 Procurement') }}</h1>-->
                 </div>
 

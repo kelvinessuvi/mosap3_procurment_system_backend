@@ -33,8 +33,7 @@ class SupplierTest extends TestCase
         $category = Category::factory()->create();
 
         $data = [
-            'legal_name' => 'Test Company',
-            'commercial_name' => 'Test Inc',
+            'company_name' => 'Test Company',
             'email' => 'company@test.com',
             'phone' => '123456789',
             'nif' => '999999999',
@@ -59,20 +58,15 @@ class SupplierTest extends TestCase
         $supplier = Supplier::factory()->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user, 'sanctum')->putJson("/api/suppliers/{$supplier->id}", [
-            'legal_name' => 'Updated Name',
-            'commercial_name' => $supplier->commercial_name, // keep original
+            'company_name' => 'Updated Name',
             'email' => $supplier->email, // keep original
             'phone' => $supplier->phone, // keep original
             'nif' => $supplier->nif,
         ]); // Validation rules might require re-sending some fields if not strictly patch
 
-        // Actually the controller validation for update has 'sometimes' or 'nullable' logic?
-        // Let's check controller again. It validates what is present but email/nif unique ignore.
-        // It validates basic fields as 'string|max:255' but not 'required' on update (no 'required' rule).
-        // Wait, line 110: 'legal_name' => 'string|max:255'. It's not required.
         
         $response->assertStatus(200)
-                 ->assertJson(['legal_name' => 'Updated Name']);
+                 ->assertJson(['company_name' => 'Updated Name']);
     }
 
     public function test_can_delete_supplier()

@@ -10,7 +10,7 @@
     <div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <!-- Logo -->
         <div class="mb-8 text-center">
-            <img src="https://mosap3-api.yetuware.com/logo.svg" alt="MOSAP3 Logo" class="h-16 mx-auto">
+            <img src="https://api.mosap3.yetuware.it.ao/logo.svg" alt="MOSAP3 Logo" class="h-16 mx-auto">
         </div>
         
         <!-- Header -->
@@ -18,8 +18,8 @@
             <div class="px-6 py-8 border-b border-gray-200">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Referência PP: {{ $quotation->title }}</h1>
-                        <h2 class="text-2xl font-bold text-gray-900">Descrição da Actividade: {{ $quotation->activity_description }}</h2>
+                        <h1 class="text-2xl font-bold text-gray-900">Referência PP: {{ $quotation->activity_description }}</h1>
+                        <h2 class="text-2xl font-bold text-gray-900">Título da Actividade: {{ $quotation->title }}</h2>
                         <p class="text-sm text-gray-500 mt-1">System ID: {{ $quotation->reference_number }}</p>
                     </div>
                     <div class="text-right">

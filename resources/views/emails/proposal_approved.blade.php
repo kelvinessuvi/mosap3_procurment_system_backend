@@ -7,7 +7,7 @@
 
     <h2 style="text-align: center; color: #065f46;">Parabéns! Sua proposta foi aprovada.</h2>
     
-    <p>Prezado(a) <strong>{{ $supplier->commercial_name }}</strong>,</p>
+    <p>Prezado(a) <strong>{{ $supplier->company_name }}</strong>,</p>
     
     <p>Temos o prazer de informar que sua proposta foi selecionada em nosso processo de aquisição.</p>
     
@@ -33,5 +33,7 @@
     
     <p style="margin-top: 24px;">Agradecemos pelo excelente trabalho!</p>
     <p style="margin-bottom:0;">Atenciosamente,<br>
-        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br></p>
+        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br>
+        <strong>procurement@mosap3.ao</strong><br>
+    </p>
 @endsection

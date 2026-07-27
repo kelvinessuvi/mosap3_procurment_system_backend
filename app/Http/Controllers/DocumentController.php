@@ -19,7 +19,7 @@ class DocumentController extends Controller
      * @OA\Get(
      *     path="/api/suppliers/{id}/documents/{documentType}",
      *     summary="Visualizar Documento do Fornecedor",
-     *     description="Retorna o documento do fornecedor (PDF ou imagem). Tipos disponíveis: commercial_certificate (Certificado Comercial), commercial_license (Alvará Comercial), nif_proof (Comprovativo de NIF), pacto_social (Pacto Social), non_debtor_certificate (Certificado de Não Devedor)",
+      *     description="Retorna o documento do fornecedor (PDF ou imagem). Tipos disponíveis: commercial_certificate (Certificado Comercial), commercial_license (Alvará Comercial), nif_proof (Comprovativo de NIF), pacto_social (Pacto Social), non_debtor_certificate_agt (Certificado de Não Devedor AGT), non_debtor_certificate_inss (Certificado de Não Devedor INSS)",
      *     tags={"Documentos"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
@@ -36,7 +36,7 @@ class DocumentController extends Controller
      *         description="Tipo de documento",
      *         @OA\Schema(
      *             type="string",
-     *             enum={"commercial_certificate", "commercial_license", "nif_proof", "pacto_social", "non_debtor_certificate", "product_list"}
+      *             enum={"commercial_certificate", "commercial_license", "nif_proof", "pacto_social", "non_debtor_certificate_agt", "non_debtor_certificate_inss", "product_list"}
      *         )
      *     ),
      *     @OA\Response(
@@ -61,7 +61,7 @@ class DocumentController extends Controller
         // Validate document type
         $allowedTypes = [
             'commercial_certificate', 'commercial_license', 'nif_proof',
-            'pacto_social', 'non_debtor_certificate', 'product_list'
+            'pacto_social', 'non_debtor_certificate_agt', 'non_debtor_certificate_inss', 'product_list'
         ];
         if (!in_array($documentType, $allowedTypes)) {
             abort(404);

@@ -98,7 +98,7 @@ class ProductController extends Controller
             ->select(
                 'quotation_response_items.unit_price',
                 'quotation_responses.submitted_at',
-                'suppliers.commercial_name as supplier_name'
+                'suppliers.company_name as supplier_name'
             )
             ->orderBy('quotation_responses.submitted_at', 'desc')
             ->get();

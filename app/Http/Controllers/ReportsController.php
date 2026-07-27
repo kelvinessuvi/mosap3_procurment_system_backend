@@ -138,10 +138,10 @@ class ReportsController extends Controller
             ->whereIn('acquisitions.status', ['completed', 'in_progress'])
             ->select(
                 'suppliers.id',
-                'suppliers.commercial_name as name',
+                'suppliers.company_name as name',
                 \Illuminate\Support\Facades\DB::raw('COUNT(acquisitions.id) as total_acquisitions')
             )
-            ->groupBy('suppliers.id', 'suppliers.commercial_name')
+            ->groupBy('suppliers.id', 'suppliers.company_name')
             ->orderByDesc('total_acquisitions')
             ->limit(5)
             ->get();

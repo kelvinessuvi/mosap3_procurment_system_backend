@@ -6,7 +6,7 @@
         <p style="color: #6b7280;">Sua proposta requer ajustes</p>
     </div>
     
-    <p>Prezado(a) <strong>{{ $supplier->commercial_name }}</strong>,</p>
+    <p>Prezado(a) <strong>{{ $supplier->company_name }}</strong>,</p>
     
     <p>Analisamos sua proposta para <strong>{{ $quotation->title }}</strong> e gostaríamos de solicitar uma revisão nos seguintes pontos:</p>
     
@@ -25,5 +25,7 @@
     
     <div class="divider"></div>
     <p style="margin-bottom:0;">Atenciosamente,<br>
-        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br></p>
+        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br>
+        <strong>procurement@mosap3.ao</strong><br>
+    </p>
 @endsection

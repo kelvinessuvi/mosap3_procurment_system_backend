@@ -14,10 +14,10 @@ class Supplier extends Model
     use HasFactory, SoftDeletes, Auditable;
 
     protected $fillable = [
-        'legal_name', 'commercial_name', 'email', 'phone', 'alt_phone', 'nif',
+        'company_name', 'email', 'phone', 'alt_phone', 'nif',
         'activity_type', 'province', 'municipality', 'address',
         'commercial_certificate', 'commercial_license', 'nif_proof',
-        'pacto_social', 'non_debtor_certificate', 'product_list',
+        'pacto_social', 'non_debtor_certificate_agt', 'non_debtor_certificate_inss', 'product_list',
         'is_active', 'user_id',
         'registration_token', 'registration_status', 'registered_at'
     ];
@@ -42,48 +42,56 @@ class Supplier extends Model
         'commercial_license_url',
         'nif_proof_url',
         'pacto_social_url',
-        'non_debtor_certificate_url',
+        'non_debtor_certificate_agt_url',
+        'non_debtor_certificate_inss_url',
         'product_list_url'
     ];
 
     public function getCommercialCertificateUrlAttribute()
     {
-        return $this->commercial_certificate 
+        return $this->commercial_certificate
             ? url('/api/suppliers/' . $this->id . '/documents/commercial_certificate')
             : null;
     }
 
     public function getCommercialLicenseUrlAttribute()
     {
-        return $this->commercial_license 
+        return $this->commercial_license
             ? url('/api/suppliers/' . $this->id . '/documents/commercial_license')
             : null;
     }
 
     public function getNifProofUrlAttribute()
     {
-        return $this->nif_proof 
+        return $this->nif_proof
             ? url('/api/suppliers/' . $this->id . '/documents/nif_proof')
             : null;
     }
 
     public function getPactoSocialUrlAttribute()
     {
-        return $this->pacto_social 
+        return $this->pacto_social
             ? url('/api/suppliers/' . $this->id . '/documents/pacto_social')
             : null;
     }
 
-    public function getNonDebtorCertificateUrlAttribute()
+    public function getNonDebtorCertificateAgtUrlAttribute()
     {
-        return $this->non_debtor_certificate 
-            ? url('/api/suppliers/' . $this->id . '/documents/non_debtor_certificate')
+        return $this->non_debtor_certificate_agt
+            ? url('/api/suppliers/' . $this->id . '/documents/non_debtor_certificate_agt')
+            : null;
+    }
+
+    public function getNonDebtorCertificateInssUrlAttribute()
+    {
+        return $this->non_debtor_certificate_inss
+            ? url('/api/suppliers/' . $this->id . '/documents/non_debtor_certificate_inss')
             : null;
     }
 
     public function getProductListUrlAttribute()
     {
-        return $this->product_list 
+        return $this->product_list
             ? url('/api/suppliers/' . $this->id . '/documents/product_list')
             : null;
     }

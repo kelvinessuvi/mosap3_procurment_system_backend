@@ -3,14 +3,14 @@
 @section('content')
     <h2 style="text-align: center; color: #111827;">Pedido de Cotação</h2>
     
-    <!--<p>Prezado fornecedor <strong>{{ $supplier->commercial_name }}</strong>,</p>
+    <!--<p>Prezado fornecedor <strong>{{ $supplier->company_name }}</strong>,</p>
     
     <p>Sua empresa foi selecionada para participar de um processo de aquisição. Abaixo estão os detalhes da solicitação:</p>
 -->
     <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 16px; margin: 24px 0;">
         <p style="margin: 0 0 8px;"><strong>System ID:</strong> {{ $quotation->reference_number }}</p>
-        <p style="margin: 0 0 8px;"><strong>Descrição da actividade:</strong> {{ $quotation->activity_description }}</p>
-        <p style="margin: 0 0 8px;"><strong>Referência PP:</strong> {{ $quotation->title }}</p>
+        <p style="margin: 0 0 8px;"><strong>Título da actividade:</strong> {{ $quotation->title }}</p>
+        <p style="margin: 0 0 8px;"><strong>Referência PP:</strong> {{ $quotation->activity_description }}</p>
         <p style="margin: 0;"><strong>Prazo Limite:</strong> {{ $quotation->deadline->format('d/m/Y H:i') }}</p>
     </div>
 
@@ -45,5 +45,6 @@
     <div class="divider"></div>
     <p style="margin-bottom:0;">Atenciosamente,<br>
         <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br>
+        <strong>procurement@mosap3.ao</strong><br>
     </p>
 @endsection

@@ -212,23 +212,23 @@ class PublicQuotationController extends Controller
                 'user_id' => $qs->quotationRequest->user_id,
                 'type' => 'quotation_response_submitted',
                 'title' => 'Nova Proposta Recebida',
-                'message' => "O fornecedor {$qs->supplier->commercial_name} submeteu uma proposta para a cotação #{$qs->quotationRequest->id}",
+                'message' => "O fornecedor {$qs->supplier->company_name} submeteu uma proposta para a cotação #{$qs->quotationRequest->id}",
                 'data' => [
                     'quotation_request_id' => $qs->quotationRequest->id,
                     'quotation_response_id' => $response->id,
                     'supplier_id' => $qs->supplier_id,
-                    'supplier_name' => $qs->supplier->commercial_name
+                    'supplier_name' => $qs->supplier->company_name
                 ]
             ]);
 
             // Update supplier evaluation metrics
             $this->updateSupplierEvaluation($qs->supplier_id);
 
-            AuditLog::log('Submissão de proposta', "Fornecedor '{$qs->supplier->commercial_name}' submeteu proposta para cotação #{$qs->quotationRequest->id}", [
+            AuditLog::log('Submissão de proposta', "Fornecedor '{$qs->supplier->company_name}' submeteu proposta para cotação #{$qs->quotationRequest->id}", [
                 'quotation_request_id' => $qs->quotationRequest->id,
                 'quotation_supplier_id' => $qs->id,
                 'supplier_id' => $qs->supplier_id,
-                'supplier_name' => $qs->supplier->commercial_name,
+                'supplier_name' => $qs->supplier->company_name,
                 'revision_number' => $revisionNumber,
             ]);
 
@@ -256,19 +256,19 @@ class PublicQuotationController extends Controller
             'user_id' => $qs->quotationRequest->user_id,
             'type' => 'quotation_declined',
             'title' => 'Fornecedor Declinou Convite',
-            'message' => "O fornecedor {$qs->supplier->commercial_name} declinou a participação na cotação #{$qs->quotationRequest->id}",
+            'message' => "O fornecedor {$qs->supplier->company_name} declinou a participação na cotação #{$qs->quotationRequest->id}",
             'data' => [
                 'quotation_request_id' => $qs->quotationRequest->id,
                 'supplier_id' => $qs->supplier_id,
-                'supplier_name' => $qs->supplier->commercial_name
+                'supplier_name' => $qs->supplier->company_name
             ]
         ]);
 
-        AuditLog::log('Declínio de cotação', "Fornecedor '{$qs->supplier->commercial_name}' declinou cotação #{$qs->quotationRequest->id}", [
+        AuditLog::log('Declínio de cotação', "Fornecedor '{$qs->supplier->company_name}' declinou cotação #{$qs->quotationRequest->id}", [
             'quotation_request_id' => $qs->quotationRequest->id,
             'quotation_supplier_id' => $qs->id,
             'supplier_id' => $qs->supplier_id,
-            'supplier_name' => $qs->supplier->commercial_name,
+            'supplier_name' => $qs->supplier->company_name,
         ]);
 
         return response()->json(['message' => 'Participação declinada.']);

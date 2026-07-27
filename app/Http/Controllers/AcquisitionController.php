@@ -159,7 +159,7 @@ class AcquisitionController extends Controller
                 'data' => [
                     'acquisition_id' => $acquisition->id,
                     'reference_number' => $acquisition->reference_number,
-                    'supplier_name' => $acquisition->supplier->commercial_name ?? 'Fornecedor'
+                    'supplier_name' => $acquisition->supplier->company_name ?? 'Fornecedor'
                 ]
             ]);
         }

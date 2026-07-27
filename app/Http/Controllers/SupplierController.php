@@ -36,10 +36,10 @@ class SupplierController extends Controller
      *         @OA\JsonContent(type="object",
      *             @OA\Property(property="data", type="array", @OA\Items(
      *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="commercial_name", type="string"),
-     *                 @OA\Property(property="nif", type="string"),
-     *                 @OA\Property(property="email", type="string"),
-     *                 @OA\Property(property="is_active", type="boolean")
+      *                 @OA\Property(property="company_name", type="string"),
+      *                 @OA\Property(property="nif", type="string"),
+      *                 @OA\Property(property="email", type="string"),
+      *                 @OA\Property(property="is_active", type="boolean")
      *             ))
      *         )
      *     )
@@ -53,8 +53,7 @@ class SupplierController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('legal_name', 'like', "%{$search}%")
-                  ->orWhere('commercial_name', 'like', "%{$search}%")
+                $q->where('company_name', 'like', "%{$search}%")
                   ->orWhere('nif', 'like', "%{$search}%");
             });
         }
@@ -99,9 +98,9 @@ class SupplierController extends Controller
       *         @OA\MediaType(
       *             mediaType="multipart/form-data",
       *             @OA\Schema(
-      *                 required={"legal_name", "commercial_name", "email", "phone", "nif", "activity_type", "province", "municipality", "address", "commercial_certificate", "nif_proof"},
-      *                 @OA\Property(property="legal_name", type="string", example="Empresa Exemplo SA", description="Razão social da empresa"),
-      *                 @OA\Property(property="commercial_name", type="string", example="Exemplo Comercial", description="Nome comercial da empresa"),
+       *                 required={"company_name", "email", "phone", "nif", "activity_type", "province", "municipality", "address", "commercial_certificate", "nif_proof"},
+       *                 @OA\Property(property="company_name", type="string", example="Empresa Exemplo SA", description="Nome da empresa"),
+       *                 @OA\Property(property="company_name", type="string", example="Exemplo Comercial", description="Nome da empresa"),
       *                 @OA\Property(property="email", type="string", format="email", example="contato@exemplo.ao", description="Email do fornecedor (único)"),
  *                 @OA\Property(property="phone", type="string", example="+244923456789", description="Telefone de contacto"),
  *                 @OA\Property(property="alt_phone", type="string", example="+244923456788", description="Telefone alternativo"),
@@ -113,9 +112,10 @@ class SupplierController extends Controller
       *                 @OA\Property(property="commercial_certificate", type="string", format="binary", description="Certificado Comercial (PDF/JPG/PNG, máx 5MB) — Obrigatório"),
       *                 @OA\Property(property="commercial_license", type="string", format="binary", description="Alvará Comercial (PDF/JPG/PNG, máx 5MB) — Opcional"),
       *                 @OA\Property(property="nif_proof", type="string", format="binary", description="Comprovativo de NIF (PDF/JPG/PNG, máx 5MB) — Obrigatório"),
-      *                 @OA\Property(property="pacto_social", type="string", format="binary", description="Pacto Social (PDF/JPG/PNG, máx 5MB) — Opcional"),
-      *                 @OA\Property(property="non_debtor_certificate", type="string", format="binary", description="Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB) — Opcional"),
-      *                 @OA\Property(property="product_list", type="string", format="binary", description="Lista de Produtos (PDF/JPG/PNG, máx 5MB) — Opcional"),
+       *                 @OA\Property(property="pacto_social", type="string", format="binary", description="Pacto Social (PDF/JPG/PNG, máx 5MB) — Opcional"),
+       *                 @OA\Property(property="non_debtor_certificate_agt", type="string", format="binary", description="Certificado de Não Devedor AGT (PDF/JPG/PNG, máx 5MB) — Opcional"),
+       *                 @OA\Property(property="non_debtor_certificate_inss", type="string", format="binary", description="Certificado de Não Devedor INSS (PDF/JPG/PNG, máx 5MB) — Opcional"),
+       *                 @OA\Property(property="product_list", type="string", format="binary", description="Lista de Produtos (PDF/JPG/PNG, máx 5MB) — Opcional"),
       *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"), description="IDs das categorias associadas ao fornecedor")
       *             )
       *         )
@@ -125,8 +125,7 @@ class SupplierController extends Controller
       *         description="Fornecedor criado com sucesso",
       *         @OA\JsonContent(
       *             @OA\Property(property="id", type="integer", example=1),
-      *             @OA\Property(property="legal_name", type="string"),
-      *             @OA\Property(property="commercial_name", type="string"),
+       *             @OA\Property(property="company_name", type="string"),
       *             @OA\Property(property="email", type="string"),
       *             @OA\Property(property="nif", type="string"),
       *             @OA\Property(property="is_active", type="boolean"),
@@ -134,7 +133,8 @@ class SupplierController extends Controller
       *             @OA\Property(property="commercial_license_url", type="string", nullable=true),
       *             @OA\Property(property="nif_proof_url", type="string", nullable=true),
       *             @OA\Property(property="pacto_social_url", type="string", nullable=true),
-      *             @OA\Property(property="non_debtor_certificate_url", type="string", nullable=true),
+       *             @OA\Property(property="non_debtor_certificate_agt_url", type="string", nullable=true),
+       *             @OA\Property(property="non_debtor_certificate_inss_url", type="string", nullable=true),
       *             @OA\Property(property="product_list_url", type="string", nullable=true),
       *             @OA\Property(property="categories", type="array", @OA\Items(type="object"))
       *         )
@@ -149,8 +149,7 @@ class SupplierController extends Controller
         }
 
         $validated = $request->validate([
-            'legal_name' => 'required|string|max:255',
-            'commercial_name' => 'required|string|max:255',
+            'company_name' => 'required|string|max:255',
             'email' => 'required|email|unique:suppliers',
             'phone' => 'required|string|max:20',
             'alt_phone' => 'nullable|string|max:20',
@@ -168,7 +167,8 @@ class SupplierController extends Controller
             'commercial_license' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'nif_proof' => 'required|file|mimes:pdf,jpg,png|max:5120',
             'pacto_social' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
-            'non_debtor_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate_agt' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate_inss' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'product_list' => 'nullable|file|mimes:pdf,jpg,png,xlsx,xls|max:5120',
         ]);
 
@@ -187,8 +187,11 @@ class SupplierController extends Controller
         if ($request->hasFile('pacto_social')) {
             $validated['pacto_social'] = $request->file('pacto_social')->store($uploadPath, 'public');
         }
-        if ($request->hasFile('non_debtor_certificate')) {
-            $validated['non_debtor_certificate'] = $request->file('non_debtor_certificate')->store($uploadPath, 'public');
+        if ($request->hasFile('non_debtor_certificate_agt')) {
+            $validated['non_debtor_certificate_agt'] = $request->file('non_debtor_certificate_agt')->store($uploadPath, 'public');
+        }
+        if ($request->hasFile('non_debtor_certificate_inss')) {
+            $validated['non_debtor_certificate_inss'] = $request->file('non_debtor_certificate_inss')->store($uploadPath, 'public');
         }
         if ($request->hasFile('product_list')) {
             $validated['product_list'] = $request->file('product_list')->store($uploadPath, 'public');
@@ -242,7 +245,7 @@ class SupplierController extends Controller
      *         description="Classificação recuperada com sucesso",
      *         @OA\JsonContent(
      *             @OA\Property(property="supplier_id", type="integer"),
-     *             @OA\Property(property="commercial_name", type="string"),
+      *             @OA\Property(property="company_name", type="string"),
      *             @OA\Property(property="overall_score", type="number", format="float", example=85.5),
      *             @OA\Property(property="success_rate", type="number", format="float"),
      *             @OA\Property(property="response_rate", type="number", format="float"),
@@ -262,7 +265,7 @@ class SupplierController extends Controller
         if (!$evaluation) {
             return response()->json([
                 'supplier_id' => $supplier->id,
-                'commercial_name' => $supplier->commercial_name,
+                'company_name' => $supplier->company_name,
                 'overall_score' => 0,
                 'message' => 'Nenhuma avaliação disponível ainda'
             ], 200);
@@ -270,7 +273,7 @@ class SupplierController extends Controller
 
         return response()->json([
             'supplier_id' => $supplier->id,
-            'commercial_name' => $supplier->commercial_name,
+            'company_name' => $supplier->company_name,
             'overall_score' => round($evaluation->overall_score, 2),
             'success_rate' => round($evaluation->success_rate, 2),
             'response_rate' => round($evaluation->response_rate, 2),
@@ -299,8 +302,7 @@ class SupplierController extends Controller
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
      *                 @OA\Property(property="_method", type="string", example="PUT", description="Necessário para upload de arquivos em PUT"),
-     *                 @OA\Property(property="legal_name", type="string", description="Razão social"),
-     *                 @OA\Property(property="commercial_name", type="string", description="Nome comercial"),
+      *                 @OA\Property(property="company_name", type="string", description="Nome da empresa"),
      *                 @OA\Property(property="email", type="string", format="email", description="Email (único)"),
      *                 @OA\Property(property="phone", type="string", description="Telefone"),
      *                 @OA\Property(property="nif", type="string", description="NIF (único)"),
@@ -313,7 +315,8 @@ class SupplierController extends Controller
      *                 @OA\Property(property="commercial_license", type="string", format="binary", description="Alvará Comercial (PDF/JPG/PNG, máx 5MB)"),
      *                 @OA\Property(property="nif_proof", type="string", format="binary", description="Comprovativo de NIF (PDF/JPG/PNG, máx 5MB)"),
      *                 @OA\Property(property="pacto_social", type="string", format="binary", description="Pacto Social (PDF/JPG/PNG, máx 5MB)"),
-     *                 @OA\Property(property="non_debtor_certificate", type="string", format="binary", description="Certificado de Não Devedor (PDF/JPG/PNG, máx 5MB)"),
+      *                 @OA\Property(property="non_debtor_certificate_agt", type="string", format="binary", description="Certificado de Não Devedor AGT (PDF/JPG/PNG, máx 5MB)"),
+      *                 @OA\Property(property="non_debtor_certificate_inss", type="string", format="binary", description="Certificado de Não Devedor INSS (PDF/JPG/PNG, máx 5MB)"),
      *                 @OA\Property(property="product_list", type="string", format="binary", description="Lista de Produtos (PDF/JPG/PNG/XLSX, máx 5MB)"),
      *                 @OA\Property(property="categories", type="array", @OA\Items(type="integer"), description="IDs das categorias")
      *             )
@@ -330,8 +333,7 @@ class SupplierController extends Controller
         }
 
         $validated = $request->validate([
-            'legal_name' => 'string|max:255',
-            'commercial_name' => 'string|max:255',
+            'company_name' => 'string|max:255',
             'email' => ['email', Rule::unique('suppliers')->ignore($supplier->id)],
             'phone' => 'string|max:20',
             'alt_phone' => 'nullable|string|max:20',
@@ -348,7 +350,8 @@ class SupplierController extends Controller
             'commercial_license' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'nif_proof' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'pacto_social' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
-            'non_debtor_certificate' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate_agt' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
+            'non_debtor_certificate_inss' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'product_list' => 'nullable|file|mimes:pdf,jpg,png,xlsx,xls|max:5120',
         ]);
 
@@ -372,7 +375,7 @@ class SupplierController extends Controller
 
         $uploadPath = 'suppliers/documents';
 
-        foreach (['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate', 'product_list'] as $fileKey) {
+        foreach (['commercial_certificate', 'commercial_license', 'nif_proof', 'pacto_social', 'non_debtor_certificate_agt', 'non_debtor_certificate_inss', 'product_list'] as $fileKey) {
             if ($request->hasFile($fileKey)) {
                 // Delete old file
                 if ($supplier->$fileKey) {
@@ -434,8 +437,8 @@ class SupplierController extends Controller
         ]);
 
         $supplier = Supplier::create([
-            'legal_name' => 'Pendente',
-            'commercial_name' => 'Pendente',
+            'company_name' => 'Pendente',
+            'company_name' => 'Pendente',
             'email' => $validated['email'],
             'phone' => 'Pendente',
             'nif' => 'TEMP-' . Str::random(8),
@@ -490,9 +493,9 @@ class SupplierController extends Controller
 
         Mail::to($supplier->email)->send(new SupplierApprovedMail($supplier));
 
-        AuditLog::log('Aprovação de fornecedor', "Fornecedor '{$supplier->commercial_name}' foi aprovado e ativado", [
+        AuditLog::log('Aprovação de fornecedor', "Fornecedor '{$supplier->company_name}' foi aprovado e ativado", [
             'supplier_id' => $supplier->id,
-            'supplier_name' => $supplier->commercial_name,
+            'supplier_name' => $supplier->company_name,
             'email' => $supplier->email,
             'registration_status' => $supplier->registration_status,
         ], request()->user());
@@ -501,10 +504,10 @@ class SupplierController extends Controller
             'user_id' => $supplier->user_id ?? 1,
             'type' => 'supplier_approved',
             'title' => 'Fornecedor Aprovado',
-            'message' => "O fornecedor {$supplier->commercial_name} foi aprovado e está agora ativo no sistema.",
+            'message' => "O fornecedor {$supplier->company_name} foi aprovado e está agora ativo no sistema.",
             'data' => [
                 'supplier_id' => $supplier->id,
-                'supplier_name' => $supplier->commercial_name,
+                'supplier_name' => $supplier->company_name,
             ],
         ]);
 
