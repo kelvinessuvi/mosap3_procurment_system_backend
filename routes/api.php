@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'index']);
     Route::get('acquisitions/stats/products', [\App\Http\Controllers\AcquisitionController::class, 'productStats']);
     Route::post('acquisitions/{acquisition}/confirm-delivery', [\App\Http\Controllers\AcquisitionController::class, 'confirmDelivery']);
+    Route::delete('acquisitions/{acquisition}', [\App\Http\Controllers\AcquisitionController::class, 'destroy']);
     Route::get('reports/summary', [\App\Http\Controllers\ReportsController::class, 'index']);
     Route::get('suppliers/{id}/acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'supplierHistory']);
 
@@ -119,5 +120,11 @@ Route::middleware('auth:sanctum')->group(function () {
         // Audit Logs
         Route::get('audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index']);
         Route::get('audit-logs/{auditLog}', [\App\Http\Controllers\AuditLogController::class, 'show']);
+
+        // Deletion Requests Management
+        Route::get('deletion-requests', [\App\Http\Controllers\DeletionRequestController::class, 'index']);
+        Route::get('deletion-requests/{deletionRequest}', [\App\Http\Controllers\DeletionRequestController::class, 'show']);
+        Route::post('deletion-requests/{deletionRequest}/approve', [\App\Http\Controllers\DeletionRequestController::class, 'approve']);
+        Route::post('deletion-requests/{deletionRequest}/reject', [\App\Http\Controllers\DeletionRequestController::class, 'reject']);
     });
 });

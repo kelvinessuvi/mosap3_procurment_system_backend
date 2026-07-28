@@ -50,4 +50,9 @@ class QuotationRequest extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function deletionRequests()
+    {
+        return $this->morphMany(DeletionRequest::class, 'requestable');
+    }
 }

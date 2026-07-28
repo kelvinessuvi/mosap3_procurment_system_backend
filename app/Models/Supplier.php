@@ -106,6 +106,11 @@ class Supplier extends Model
         return $this->belongsToMany(Category::class);
     }
 
+    public function deletionRequests()
+    {
+        return $this->morphMany(DeletionRequest::class, 'requestable');
+    }
+
     public function evaluation()
     {
         return $this->hasOne(SupplierEvaluation::class);

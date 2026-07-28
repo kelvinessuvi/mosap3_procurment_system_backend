@@ -6,7 +6,9 @@ use App\Models\Supplier;
 use App\Mail\SupplierInvitationMail;
 use App\Mail\SupplierApprovedMail;
 use App\Models\AuditLog;
+use App\Models\DeletionRequest;
 use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -404,11 +406,64 @@ class SupplierController extends Controller
      *     @OA\Response(response=404, description="Fornecedor não encontrado")
      * )
      */
-    public function destroy(Supplier $supplier)
+    public function destroy(Request $request, Supplier $supplier)
     {
-        $supplier->delete();
+        $user = $request->user();
 
-        return response()->json(null, 204);
+        if ($user->role === 'admin') {
+            $supplier->delete();
+            return response()->json(null, 204);
+        }
+
+        $pending = DeletionRequest::where('requestable_type', Supplier::class)
+            ->where('requestable_id', $supplier->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($pending) {
+            return response()->json(['message' => 'Já existe um pedido de exclusão pendente para este fornecedor.'], 409);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $deletionRequest = DeletionRequest::create([
+            'requestable_type' => Supplier::class,
+            'requestable_id' => $supplier->id,
+            'requested_by' => $user->id,
+            'reason' => $validated['reason'],
+        ]);
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'type' => 'deletion_requested',
+                'title' => 'Solicitação de Exclusão',
+                'message' => "O utilizador {$user->name} solicitou a exclusão do fornecedor '{$supplier->company_name}'.\nMotivo: {$validated['reason']}",
+                'data' => [
+                    'deletion_request_id' => $deletionRequest->id,
+                    'requestable_type' => Supplier::class,
+                    'requestable_id' => $supplier->id,
+                    'identifier' => $supplier->company_name,
+                    'requested_by_name' => $user->name,
+                    'reason' => $validated['reason'],
+                ],
+            ]);
+        }
+
+        AuditLog::log('Solicitação de exclusão', "Utilizador '{$user->name}' solicitou exclusão do fornecedor '{$supplier->company_name}'", [
+            'deletion_request_id' => $deletionRequest->id,
+            'supplier_id' => $supplier->id,
+            'supplier_name' => $supplier->company_name,
+            'reason' => $validated['reason'],
+        ], $user);
+
+        return response()->json([
+            'message' => 'Solicitação de exclusão enviada para aprovação do administrador.',
+            'deletion_request' => $deletionRequest,
+        ], 201);
     }
 
     /**
@@ -436,7 +491,6 @@ class SupplierController extends Controller
         ]);
 
         $supplier = Supplier::create([
-            'company_name' => 'Pendente',
             'company_name' => 'Pendente',
             'email' => $validated['email'],
             'phone' => 'Pendente',

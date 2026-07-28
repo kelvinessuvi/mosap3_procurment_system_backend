@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Mail\QuotationRequestMail;
 use App\Models\AuditLog;
+use App\Models\DeletionRequest;
+use App\Models\Notification;
 use App\Models\QuotationRequest;
 use App\Models\QuotationSupplier;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -236,13 +239,67 @@ class QuotationRequestController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(QuotationRequest $quotationRequest)
+    public function destroy(Request $request, QuotationRequest $quotationRequest)
     {
-        if ($quotationRequest->status !== 'draft') {
-            return response()->json(['message' => 'Apenas cotações em rascunho podem ser excluídas.'], 400);
+        $user = $request->user();
+
+        if ($user->role === 'admin') {
+            if ($quotationRequest->status !== 'draft') {
+                return response()->json(['message' => 'Apenas cotações em rascunho podem ser excluídas diretamente.'], 400);
+            }
+            $quotationRequest->delete();
+            return response()->json(null, 204);
         }
-        $quotationRequest->delete();
-        return response()->json(null, 204);
+
+        $pending = DeletionRequest::where('requestable_type', QuotationRequest::class)
+            ->where('requestable_id', $quotationRequest->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($pending) {
+            return response()->json(['message' => 'Já existe um pedido de exclusão pendente para esta cotação.'], 409);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $deletionRequest = DeletionRequest::create([
+            'requestable_type' => QuotationRequest::class,
+            'requestable_id' => $quotationRequest->id,
+            'requested_by' => $user->id,
+            'reason' => $validated['reason'],
+        ]);
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'type' => 'deletion_requested',
+                'title' => 'Solicitação de Exclusão',
+                'message' => "O utilizador {$user->name} solicitou a exclusão da cotação #{$quotationRequest->reference_number}.\nMotivo: {$validated['reason']}",
+                'data' => [
+                    'deletion_request_id' => $deletionRequest->id,
+                    'requestable_type' => QuotationRequest::class,
+                    'requestable_id' => $quotationRequest->id,
+                    'identifier' => $quotationRequest->reference_number,
+                    'requested_by_name' => $user->name,
+                    'reason' => $validated['reason'],
+                ],
+            ]);
+        }
+
+        AuditLog::log('Solicitação de exclusão', "Utilizador '{$user->name}' solicitou exclusão da cotação #{$quotationRequest->reference_number}", [
+            'deletion_request_id' => $deletionRequest->id,
+            'quotation_request_id' => $quotationRequest->id,
+            'reference_number' => $quotationRequest->reference_number,
+            'reason' => $validated['reason'],
+        ], $user);
+
+        return response()->json([
+            'message' => 'Solicitação de exclusão enviada para aprovação do administrador.',
+            'deletion_request' => $deletionRequest,
+        ], 201);
     }
 
     // Custom Actions

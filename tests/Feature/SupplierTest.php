@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\DeletionRequest;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,14 +70,36 @@ class SupplierTest extends TestCase
                  ->assertJson(['company_name' => 'Updated Name']);
     }
 
-    public function test_can_delete_supplier()
+    public function test_admin_can_delete_supplier_directly()
     {
-        $user = User::factory()->create();
-        $supplier = Supplier::factory()->create(['user_id' => $user->id]);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $supplier = Supplier::factory()->create(['user_id' => $admin->id]);
 
-        $response = $this->actingAs($user, 'sanctum')->deleteJson("/api/suppliers/{$supplier->id}");
+        $response = $this->actingAs($admin, 'sanctum')->deleteJson("/api/suppliers/{$supplier->id}");
 
         $response->assertStatus(204);
         $this->assertSoftDeleted($supplier);
+    }
+
+    public function test_non_admin_creates_deletion_request()
+    {
+        $user = User::factory()->create(['role' => 'procurement_technician']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $supplier = Supplier::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user, 'sanctum')->deleteJson("/api/suppliers/{$supplier->id}", [
+            'reason' => 'Fornecedor não cumpre requisitos',
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('deletion_requests', [
+            'requestable_type' => Supplier::class,
+            'requestable_id' => $supplier->id,
+            'requested_by' => $user->id,
+            'status' => 'pending',
+            'reason' => 'Fornecedor não cumpre requisitos',
+        ]);
+        // Supplier should still exist (soft delete not applied)
+        $this->assertDatabaseHas('suppliers', ['id' => $supplier->id]);
     }
 }

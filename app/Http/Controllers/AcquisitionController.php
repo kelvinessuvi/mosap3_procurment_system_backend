@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Acquisition;
 use App\Models\AuditLog;
+use App\Models\DeletionRequest;
 use App\Models\Notification;
 use App\Models\QuotationItem;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -168,5 +170,65 @@ class AcquisitionController extends Controller
             'message' => 'Entrega confirmada e aquisição concluída.',
             'acquisition' => $acquisition
         ]);
+    }
+
+    public function destroy(Request $request, Acquisition $acquisition)
+    {
+        $user = $request->user();
+
+        if ($user->role === 'admin') {
+            $acquisition->delete();
+            return response()->json(null, 204);
+        }
+
+        $pending = DeletionRequest::where('requestable_type', Acquisition::class)
+            ->where('requestable_id', $acquisition->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($pending) {
+            return response()->json(['message' => 'Já existe um pedido de exclusão pendente para esta aquisição.'], 409);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $deletionRequest = DeletionRequest::create([
+            'requestable_type' => Acquisition::class,
+            'requestable_id' => $acquisition->id,
+            'requested_by' => $user->id,
+            'reason' => $validated['reason'],
+        ]);
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'type' => 'deletion_requested',
+                'title' => 'Solicitação de Exclusão',
+                'message' => "O utilizador {$user->name} solicitou a exclusão da aquisição #{$acquisition->reference_number}.\nMotivo: {$validated['reason']}",
+                'data' => [
+                    'deletion_request_id' => $deletionRequest->id,
+                    'requestable_type' => Acquisition::class,
+                    'requestable_id' => $acquisition->id,
+                    'identifier' => $acquisition->reference_number,
+                    'requested_by_name' => $user->name,
+                    'reason' => $validated['reason'],
+                ],
+            ]);
+        }
+
+        AuditLog::log('Solicitação de exclusão', "Utilizador '{$user->name}' solicitou exclusão da aquisição #{$acquisition->reference_number}", [
+            'deletion_request_id' => $deletionRequest->id,
+            'acquisition_id' => $acquisition->id,
+            'reference_number' => $acquisition->reference_number,
+            'reason' => $validated['reason'],
+        ], $user);
+
+        return response()->json([
+            'message' => 'Solicitação de exclusão enviada para aprovação do administrador.',
+            'deletion_request' => $deletionRequest,
+        ], 201);
     }
 }
