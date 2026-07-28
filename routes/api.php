@@ -136,22 +136,28 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('quotation-responses/{quotationResponse}/request-revision', [\App\Http\Controllers\QuotationResponseController::class, 'requestRevision'])->middleware('menu:supplier-evaluations,write');
             Route::post('quotation-responses/{quotationResponse}/create-acquisition', [\App\Http\Controllers\QuotationResponseController::class, 'createAcquisition'])->middleware('menu:supplier-evaluations,write');
 
-            // Dashboard
-            Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
-
-            // Evaluations
+            // Supplier Evaluations
             Route::get('supplier-evaluations', [\App\Http\Controllers\EvaluationController::class, 'index']);
             Route::get('suppliers/{id}/evaluation', [\App\Http\Controllers\EvaluationController::class, 'show']);
             Route::post('suppliers/{id}/evaluation/recalculate', [\App\Http\Controllers\EvaluationController::class, 'recalculate'])->middleware('menu:supplier-evaluations,write');
             Route::post('supplier-evaluations/recalculate-all', [\App\Http\Controllers\EvaluationController::class, 'recalculateAll'])->middleware('menu:supplier-evaluations,write');
+        });
 
-            // Audit Logs
-            Route::get('audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->middleware('menu:audit-logs,read');
-            Route::get('audit-logs/{auditLog}', [\App\Http\Controllers\AuditLogController::class, 'show'])->middleware('menu:audit-logs,read');
+        // Dashboard
+        Route::middleware('menu:dashboard,read')->group(function () {
+            Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
+        });
 
-            // Deletion Requests Management
-            Route::get('deletion-requests', [\App\Http\Controllers\DeletionRequestController::class, 'index'])->middleware('menu:deletion-requests,read');
-            Route::get('deletion-requests/{deletionRequest}', [\App\Http\Controllers\DeletionRequestController::class, 'show'])->middleware('menu:deletion-requests,read');
+        // Audit Logs
+        Route::middleware('menu:audit-logs,read')->group(function () {
+            Route::get('audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index']);
+            Route::get('audit-logs/{auditLog}', [\App\Http\Controllers\AuditLogController::class, 'show']);
+        });
+
+        // Deletion Requests Management
+        Route::middleware('menu:deletion-requests,read')->group(function () {
+            Route::get('deletion-requests', [\App\Http\Controllers\DeletionRequestController::class, 'index']);
+            Route::get('deletion-requests/{deletionRequest}', [\App\Http\Controllers\DeletionRequestController::class, 'show']);
             Route::post('deletion-requests/{deletionRequest}/approve', [\App\Http\Controllers\DeletionRequestController::class, 'approve'])->middleware('menu:deletion-requests,write');
             Route::post('deletion-requests/{deletionRequest}/reject', [\App\Http\Controllers\DeletionRequestController::class, 'reject'])->middleware('menu:deletion-requests,write');
         });

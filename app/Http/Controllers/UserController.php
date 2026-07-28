@@ -161,6 +161,10 @@ class UserController extends Controller
     {
         $user = $request->user();
 
+        if ($user->role !== 'admin') {
+            $user->load('menuPermissions');
+        }
+
         $menus = Menu::with('children')
             ->whereNull('parent_id')
             ->where('is_active', true)
@@ -173,13 +177,16 @@ class UserController extends Controller
 
     private function formatMenu(Menu $menu, User $user): array
     {
-        $permissions = $user->role === 'admin'
-            ? ['read', 'write']
-            : ($user->menuPermissions()->wherePivot('menu_id', $menu->id)->first()?->pivot->level === 'write'
-                ? ['write']
-                : ($user->menuPermissions()->wherePivot('menu_id', $menu->id)->first()?->pivot->level === 'read'
-                    ? ['read']
-                    : []));
+        if ($user->role === 'admin') {
+            $permissions = ['read', 'write'];
+        } else {
+            $perm = $user->menuPermissions->firstWhere('id', $menu->id);
+            $permissions = match ($perm?->pivot->level) {
+                'write' => ['write'],
+                'read' => ['read'],
+                default => [],
+            };
+        }
 
         return [
             'id' => $menu->id,
