@@ -172,6 +172,24 @@ class AcquisitionController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/acquisitions/{acquisition}",
+     *     summary="Remover aquisição ou solicitar exclusão",
+     *     description="Admin remove diretamente (204). Não-admin cria pedido de exclusão pendente para aprovação (201).",
+     *     tags={"Aquisições"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="acquisition", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="reason", type="string", description="Motivo/justificativa (obrigatório para não-admin)", example="Aquisição cancelada")
+     *         )
+     *     ),
+     *     @OA\Response(response=204, description="Aquisição removida diretamente (admin)"),
+     *     @OA\Response(response=201, description="Pedido de exclusão criado (não-admin)"),
+     *     @OA\Response(response=409, description="Já existe um pedido pendente para esta aquisição")
+     * )
+     */
     public function destroy(Request $request, Acquisition $acquisition)
     {
         $user = $request->user();

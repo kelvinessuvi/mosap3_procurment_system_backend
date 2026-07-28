@@ -9,8 +9,24 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @OA\Tag(
+ *     name="Pedidos de Exclusão",
+ *     description="Gestão de solicitações de exclusão de registos (admin)"
+ * )
+ */
 class DeletionRequestController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/deletion-requests",
+     *     summary="Listar pedidos de exclusão",
+     *     tags={"Pedidos de Exclusão"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="status", in="query", description="Filtrar por status", @OA\Schema(type="string", enum={"pending", "approved", "rejected"})),
+     *     @OA\Response(response=200, description="Lista de pedidos")
+     * )
+     */
     public function index(Request $request)
     {
         $query = DeletionRequest::with(['requestable', 'requester', 'reviewer'])
@@ -23,6 +39,17 @@ class DeletionRequestController extends Controller
         return response()->json($query->paginate(15));
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/deletion-requests/{id}",
+     *     summary="Detalhes do pedido de exclusão",
+     *     tags={"Pedidos de Exclusão"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Detalhes do pedido"),
+     *     @OA\Response(response=404, description="Pedido não encontrado")
+     * )
+     */
     public function show(DeletionRequest $deletionRequest)
     {
         return response()->json(
@@ -30,6 +57,18 @@ class DeletionRequestController extends Controller
         );
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/deletion-requests/{id}/approve",
+     *     summary="Aprovar exclusão",
+     *     description="Aprova o pedido e remove definitivamente o registo do sistema.",
+     *     tags={"Pedidos de Exclusão"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Exclusão aprovada e registo removido"),
+     *     @OA\Response(response=400, description="Pedido já foi processado")
+     * )
+     */
     public function approve(Request $request, DeletionRequest $deletionRequest)
     {
         if ($deletionRequest->status !== 'pending') {
@@ -78,6 +117,26 @@ class DeletionRequestController extends Controller
         });
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/deletion-requests/{id}/reject",
+     *     summary="Rejeitar exclusão",
+     *     description="Rejeita o pedido de exclusão. O registo é mantido intacto.",
+     *     tags={"Pedidos de Exclusão"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"rejection_reason"},
+     *             @OA\Property(property="rejection_reason", type="string", example="Fornecedor com contratos ativos")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Exclusão rejeitada, registo mantido"),
+     *     @OA\Response(response=400, description="Pedido já foi processado"),
+     *     @OA\Response(response=422, description="Erro de validação")
+     * )
+     */
     public function reject(Request $request, DeletionRequest $deletionRequest)
     {
         if ($deletionRequest->status !== 'pending') {

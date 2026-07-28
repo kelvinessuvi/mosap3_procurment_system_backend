@@ -237,7 +237,23 @@ class QuotationRequestController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *     path="/api/quotation-requests/{id}",
+     *     summary="Remover cotação ou solicitar exclusão",
+     *     description="Admin remove diretamente se for rascunho (204). Não-admin cria pedido de exclusão pendente para aprovação (201).",
+     *     tags={"Cotações (Requests)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="reason", type="string", description="Motivo/justificativa (obrigatório para não-admin)", example="Cotação duplicada")
+     *         )
+     *     ),
+     *     @OA\Response(response=204, description="Cotação removida diretamente (admin, apenas rascunho)"),
+     *     @OA\Response(response=201, description="Pedido de exclusão criado (não-admin)"),
+     *     @OA\Response(response=400, description="Apenas cotações em rascunho podem ser excluídas diretamente"),
+     *     @OA\Response(response=409, description="Já existe um pedido pendente para esta cotação")
+     * )
      */
     public function destroy(Request $request, QuotationRequest $quotationRequest)
     {

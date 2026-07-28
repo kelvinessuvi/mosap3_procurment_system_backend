@@ -398,11 +398,19 @@ class SupplierController extends Controller
     /**
      * @OA\Delete(
      *     path="/api/suppliers/{id}",
-     *     summary="Remover fornecedor",
+     *     summary="Remover fornecedor ou solicitar exclusão",
+     *     description="Admin remove diretamente (204). Não-admin cria pedido de exclusão pendente para aprovação (201).",
      *     tags={"Fornecedores"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=204, description="Fornecedor removido"),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="reason", type="string", description="Motivo/justificativa (obrigatório para não-admin)", example="Fornecedor não cumpre requisitos")
+     *         )
+     *     ),
+     *     @OA\Response(response=204, description="Fornecedor removido diretamente (admin)"),
+     *     @OA\Response(response=201, description="Pedido de exclusão criado (não-admin)"),
+     *     @OA\Response(response=409, description="Já existe um pedido pendente para este fornecedor"),
      *     @OA\Response(response=404, description="Fornecedor não encontrado")
      * )
      */
