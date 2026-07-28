@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "https://api.mosap3.yetuware.it.ao/",
+            "url": "http://localhost:8000",
             "description": "Servidor da API"
         }
     ],
@@ -908,6 +908,205 @@
                 "responses": {
                     "200": {
                         "description": "Lista de avaliações"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/menus": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Listar menus do sistema",
+                "operationId": "1dc6b7b84ebea40905c68ce4f844da25",
+                "responses": {
+                    "200": {
+                        "description": "Lista de menus"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Criar novo menu",
+                "operationId": "37652f848e93b047d0f6f39cb4df6269",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "slug"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Relatórios"
+                                    },
+                                    "slug": {
+                                        "type": "string",
+                                        "example": "reports"
+                                    },
+                                    "parent_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "icon": {
+                                        "type": "string"
+                                    },
+                                    "order": {
+                                        "type": "integer"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Menu criado"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/menus/{menu}": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Exibir detalhes do menu",
+                "operationId": "d261d55db34f7bb90e626b6321fcad24",
+                "parameters": [
+                    {
+                        "name": "menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalhes do menu"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Actualizar menu",
+                "operationId": "609f531f59cf1631f9f2666c72f89196",
+                "parameters": [
+                    {
+                        "name": "menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "parent_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "icon": {
+                                        "type": "string"
+                                    },
+                                    "order": {
+                                        "type": "integer"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Menu actualizado"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Remover menu",
+                "operationId": "3d1b582af249c6f3d07293a8d1f66ebd",
+                "parameters": [
+                    {
+                        "name": "menu",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Menu removido"
                     }
                 },
                 "security": [
@@ -3016,6 +3215,119 @@
                     }
                 ]
             }
+        },
+        "/api/user/permissions": {
+            "get": {
+                "tags": [
+                    "Usuários"
+                ],
+                "summary": "Obter menus e permissões do utilizador autenticado",
+                "description": "Devolve a árvore de menus com as permissões do utilizador. Admin recebe todas as permissões.",
+                "operationId": "7395409c32ac5651f48856f326813f0c",
+                "responses": {
+                    "200": {
+                        "description": "Lista de menus com permissões"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{user}/permissions": {
+            "get": {
+                "tags": [
+                    "Permissões de Utilizadores"
+                ],
+                "summary": "Obter permissões de menu de um utilizador",
+                "operationId": "7c616d8decf3e452d236b78837651d7f",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permissões do utilizador"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Permissões de Utilizadores"
+                ],
+                "summary": "Definir permissões de menu de um utilizador",
+                "description": "Substitui todas as permissões actuais do utilizador. Enviar array vazio para remover todas.",
+                "operationId": "b09a32b02804061b9e3c8340453f552d",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "permissions"
+                                ],
+                                "properties": {
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "menu_id": {
+                                                    "type": "integer"
+                                                },
+                                                "level": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "read",
+                                                        "write"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissões actualizadas"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -3056,6 +3368,10 @@
             "description": "Métricas de Desempenho Automatizadas"
         },
         {
+            "name": "Menus",
+            "description": "Gestão de menus do sistema (Admin apenas)"
+        },
+        {
             "name": "Notificações",
             "description": "Gestão de Notificações In-App"
         },
@@ -3086,6 +3402,10 @@
         {
             "name": "Usuários",
             "description": "Gestão de usuários (Admin apenas)"
+        },
+        {
+            "name": "Permissões de Utilizadores",
+            "description": "Gestão de permissões de menu por utilizador (Admin apenas)"
         },
         {
             "name": "Autenticação",

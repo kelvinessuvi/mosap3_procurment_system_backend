@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Menu;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -144,5 +145,50 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/user/permissions",
+     *     summary="Obter menus e permissões do utilizador autenticado",
+     *     description="Devolve a árvore de menus com as permissões do utilizador. Admin recebe todas as permissões.",
+     *     tags={"Usuários"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Lista de menus com permissões")
+     * )
+     */
+    public function myPermissions(Request $request)
+    {
+        $user = $request->user();
+
+        $menus = Menu::with('children')
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('order')
+            ->get()
+            ->map(fn ($menu) => $this->formatMenu($menu, $user));
+
+        return response()->json($menus);
+    }
+
+    private function formatMenu(Menu $menu, User $user): array
+    {
+        $permissions = $user->role === 'admin'
+            ? ['read', 'write']
+            : ($user->menuPermissions()->wherePivot('menu_id', $menu->id)->first()?->pivot->level === 'write'
+                ? ['write']
+                : ($user->menuPermissions()->wherePivot('menu_id', $menu->id)->first()?->pivot->level === 'read'
+                    ? ['read']
+                    : []));
+
+        return [
+            'id' => $menu->id,
+            'name' => $menu->name,
+            'slug' => $menu->slug,
+            'icon' => $menu->icon,
+            'order' => $menu->order,
+            'permissions' => $permissions,
+            'children' => $menu->children->map(fn ($child) => $this->formatMenu($child, $user)),
+        ];
     }
 }

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\DeletionRequest;
+use App\Models\Menu;
 use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,9 +17,30 @@ class SupplierTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_list_suppliers()
+    private function createMenu(): Menu
+    {
+        return Menu::factory()->create(['slug' => 'suppliers']);
+    }
+
+    private function createUserWithSupplierRead(): User
     {
         $user = User::factory()->create();
+        $menu = $this->createMenu();
+        $user->menuPermissions()->attach($menu->id, ['level' => 'read']);
+        return $user;
+    }
+
+    private function createUserWithSupplierWrite(): User
+    {
+        $user = User::factory()->create();
+        $menu = $this->createMenu();
+        $user->menuPermissions()->attach($menu->id, ['level' => 'write']);
+        return $user;
+    }
+
+    public function test_can_list_suppliers()
+    {
+        $user = $this->createUserWithSupplierRead();
         Supplier::factory()->count(3)->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user, 'sanctum')->getJson('/api/suppliers');
@@ -30,7 +52,7 @@ class SupplierTest extends TestCase
     public function test_can_create_supplier_with_documents()
     {
         Storage::fake('local');
-        $user = User::factory()->create();
+        $user = $this->createUserWithSupplierWrite();
         $category = Category::factory()->create();
 
         $data = [
@@ -55,7 +77,7 @@ class SupplierTest extends TestCase
 
     public function test_can_update_supplier()
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithSupplierWrite();
         $supplier = Supplier::factory()->create(['user_id' => $user->id]);
 
         $response = $this->actingAs($user, 'sanctum')->putJson("/api/suppliers/{$supplier->id}", [
@@ -63,7 +85,7 @@ class SupplierTest extends TestCase
             'email' => $supplier->email, // keep original
             'phone' => $supplier->phone, // keep original
             'nif' => $supplier->nif,
-        ]); // Validation rules might require re-sending some fields if not strictly patch
+        ]);
 
         
         $response->assertStatus(200)
@@ -83,7 +105,7 @@ class SupplierTest extends TestCase
 
     public function test_non_admin_creates_deletion_request()
     {
-        $user = User::factory()->create(['role' => 'procurement_technician']);
+        $user = $this->createUserWithSupplierWrite();
         $admin = User::factory()->create(['role' => 'admin']);
         $supplier = Supplier::factory()->create(['user_id' => $user->id]);
 

@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('suppliers', function (Blueprint $table) {
-            $table->string('company_name')->after('id');
+            $table->string('company_name')->nullable()->after('id');
         });
 
         DB::statement('UPDATE suppliers SET company_name = commercial_name');

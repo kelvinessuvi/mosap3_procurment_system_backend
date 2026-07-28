@@ -55,4 +55,32 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+
+    public function menuPermissions()
+    {
+        return $this->belongsToMany(Menu::class, 'user_menu_permissions')
+            ->withPivot('level')
+            ->withTimestamps();
+    }
+
+    public function canAccessMenu(string $menuSlug, string $permissionType = 'read'): bool
+    {
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        $perm = $this->menuPermissions()
+            ->where('menus.slug', $menuSlug)
+            ->first();
+
+        if (!$perm) {
+            return false;
+        }
+
+        if ($permissionType === 'read') {
+            return in_array($perm->pivot->level, ['read', 'write'], true);
+        }
+
+        return $perm->pivot->level === 'write';
+    }
 }
