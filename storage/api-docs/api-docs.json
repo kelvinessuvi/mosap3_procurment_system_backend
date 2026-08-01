@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "http://api.mosap3.yetuware.it.ao/",
+            "url": "https://api.mosap3.yetuware.it.ao/",
             "description": "Servidor da API"
         }
     ],
