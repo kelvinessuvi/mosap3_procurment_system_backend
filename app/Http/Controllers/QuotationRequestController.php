@@ -332,7 +332,7 @@ class QuotationRequestController extends Controller
      *     @OA\Response(response=400, description="Erro (apenas rascunhos podem ser enviados)")
      * )
      */
-    public function send(QuotationRequest $quotationRequest)
+    public function send(Request $request, QuotationRequest $quotationRequest)
     {
         if ($quotationRequest->status !== 'draft') {
             // Allow re-sending to specific suppliers? 

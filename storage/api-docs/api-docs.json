@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "https://api.mosap3.yetuware.it.ao/",
+            "url": "http://localhost:8000",
             "description": "Servidor da API"
         }
     ],

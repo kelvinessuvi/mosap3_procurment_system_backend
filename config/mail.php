@@ -114,6 +114,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Procurement Address
+    |--------------------------------------------------------------------------
+    |
+    | Address used as the central recipient for automatic reminders and
+    | deadline alerts.
+    |
+    */
+
+    'procurement_address' => env('MAIL_PROCUREMENT_ADDRESS', 'procurement@mosap3.ao'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Markdown Mail Settings
     |--------------------------------------------------------------------------
     |
