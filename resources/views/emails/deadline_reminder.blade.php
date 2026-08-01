@@ -83,7 +83,7 @@
 
     <div class="divider"></div>
     <p style="margin-bottom:0;">Atenciosamente,<br>
-        <strong>Equipe de Procurement</strong><br>
+        <strong>{{ $senderUser->name ?? 'Equipe de Procurement' }}</strong><br>
         <strong>procurement@mosap3.ao</strong><br>
     </p>
 @endsection
