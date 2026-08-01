@@ -151,7 +151,7 @@ class UserController extends Controller
      * @OA\Get(
      *     path="/api/user/permissions",
      *     summary="Obter menus e permissões do utilizador autenticado",
-     *     description="Devolve a árvore de menus com as permissões do utilizador. Admin recebe todas as permissões.",
+     *     description="Devolve a árvore de menus com as permissões do utilizador. Menus sem permissão são omitidos. Admin recebe todos os menus.",
      *     tags={"Usuários"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(response=200, description="Lista de menus com permissões")
@@ -170,12 +170,14 @@ class UserController extends Controller
             ->where('is_active', true)
             ->orderBy('order')
             ->get()
-            ->map(fn ($menu) => $this->formatMenu($menu, $user));
+            ->map(fn ($menu) => $this->formatMenu($menu, $user))
+            ->filter()
+            ->values();
 
         return response()->json($menus);
     }
 
-    private function formatMenu(Menu $menu, User $user): array
+    private function formatMenu(Menu $menu, User $user): ?array
     {
         if ($user->role === 'admin') {
             $permissions = ['read', 'write'];
@@ -188,6 +190,15 @@ class UserController extends Controller
             };
         }
 
+        $children = $menu->children
+            ->map(fn ($child) => $this->formatMenu($child, $user))
+            ->filter()
+            ->values();
+
+        if ($permissions === [] && $children->isEmpty()) {
+            return null;
+        }
+
         return [
             'id' => $menu->id,
             'name' => $menu->name,
@@ -195,7 +206,7 @@ class UserController extends Controller
             'icon' => $menu->icon,
             'order' => $menu->order,
             'permissions' => $permissions,
-            'children' => $menu->children->map(fn ($child) => $this->formatMenu($child, $user)),
+            'children' => $children,
         ];
     }
 }

@@ -3222,7 +3222,7 @@
                     "Usuários"
                 ],
                 "summary": "Obter menus e permissões do utilizador autenticado",
-                "description": "Devolve a árvore de menus com as permissões do utilizador. Admin recebe todas as permissões.",
+                "description": "Devolve a árvore de menus com as permissões do utilizador. Menus sem permissão são omitidos. Admin recebe todos os menus.",
                 "operationId": "7395409c32ac5651f48856f326813f0c",
                 "responses": {
                     "200": {

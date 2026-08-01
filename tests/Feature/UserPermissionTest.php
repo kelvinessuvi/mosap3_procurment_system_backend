@@ -115,9 +115,34 @@ class UserPermissionTest extends TestCase
         $suppliers = collect($response->json())->firstWhere('slug', 'suppliers');
         $this->assertEquals(['read'], $suppliers['permissions']);
 
-        // products has no permission (not assigned)
-        $products = collect($response->json())->firstWhere('slug', 'products');
-        $this->assertEquals([], $products['permissions']);
+        // products has no permission -> must be omitted from the response
+        $this->assertNull(collect($response->json())->firstWhere('slug', 'products'));
+        $this->assertCount(1, $response->json());
+    }
+
+    public function test_my_permissions_omits_unassigned_menus_and_keeps_accessible_children()
+    {
+        $tech = User::factory()->create(['role' => 'procurement_technician']);
+        $parent = Menu::factory()->create(['slug' => 'parent-menu', 'is_active' => true]);
+        $child = Menu::factory()->create([
+            'slug' => 'child-menu',
+            'is_active' => true,
+            'parent_id' => $parent->id,
+        ]);
+        $unassigned = Menu::factory()->create(['slug' => 'unassigned-menu', 'is_active' => true]);
+
+        $tech->menuPermissions()->attach($child->id, ['level' => 'write']);
+
+        $response = $this->actingAs($tech, 'sanctum')->getJson('/api/user/permissions');
+
+        $response->assertStatus(200);
+        $this->assertNull(collect($response->json())->firstWhere('slug', 'unassigned-menu'));
+
+        $parentMenu = collect($response->json())->firstWhere('slug', 'parent-menu');
+        $this->assertNotNull($parentMenu);
+        $this->assertEquals([], $parentMenu['permissions']);
+        $this->assertEquals(['write'], $parentMenu['children'][0]['permissions']);
+        $this->assertEquals('child-menu', $parentMenu['children'][0]['slug']);
     }
 
     public function test_menu_middleware_blocks_technician_without_permission()
