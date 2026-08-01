@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class QuotationRequest extends Model
 {
-    use HasFactory, Auditable;
+    use HasFactory, Auditable, SoftDeletes;
 
     protected $fillable = [
         'reference_number', 'title', 'description', 'activity_description',
@@ -31,6 +32,19 @@ class QuotationRequest extends Model
                 $model->reference_number = 'QT-' . date('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(4));
             }
         });
+
+        static::deleting(function ($model) {
+            $model->maskSensitiveData();
+        });
+    }
+
+    public function maskSensitiveData(): void
+    {
+        $this->forceFill([
+            'title' => 'Eliminado',
+            'description' => null,
+            'activity_description' => null,
+        ])->save();
     }
 
     public function suppliers()

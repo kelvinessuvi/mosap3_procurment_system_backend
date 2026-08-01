@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Acquisition extends Model
 {
-    use HasFactory, Auditable;
+    use HasFactory, Auditable, SoftDeletes;
 
     protected $fillable = [
         'quotation_request_id', 'quotation_response_id',
@@ -33,6 +34,18 @@ class Acquisition extends Model
                  $model->reference_number = 'ACQ-' . strtoupper(\Illuminate\Support\Str::random(8));
             }
         });
+
+        static::deleting(function ($model) {
+            $model->maskSensitiveData();
+        });
+    }
+
+    public function maskSensitiveData(): void
+    {
+        $this->forceFill([
+            'total_amount' => 0,
+            'justification' => null,
+        ])->save();
     }
 
     public function quotationRequest()

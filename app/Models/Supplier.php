@@ -35,6 +35,33 @@ class Supplier extends Model
                 $model->registration_token = Str::random(64);
             }
         });
+
+        static::deleting(function ($model) {
+            $model->maskSensitiveData();
+        });
+    }
+
+    public function maskSensitiveData(): void
+    {
+        $this->forceFill([
+            'company_name' => "Fornecedor Eliminado {$this->id}",
+            'email' => "deleted-{$this->id}@deleted.del",
+            'phone' => '0000000000',
+            'alt_phone' => null,
+            'nif' => "ELIMINADO-{$this->id}",
+            'province' => 'ELIMINADO',
+            'municipality' => 'ELIMINADO',
+            'address' => null,
+            'commercial_certificate' => null,
+            'commercial_license' => null,
+            'nif_proof' => null,
+            'pacto_social' => null,
+            'non_debtor_certificate_agt' => null,
+            'non_debtor_certificate_inss' => null,
+            'product_list' => null,
+            'is_active' => false,
+            'registration_token' => null,
+        ])->save();
     }
 
     protected $appends = [

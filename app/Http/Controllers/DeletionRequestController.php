@@ -61,7 +61,7 @@ class DeletionRequestController extends Controller
      * @OA\Post(
      *     path="/api/deletion-requests/{id}/approve",
      *     summary="Aprovar exclusão",
-     *     description="Aprova o pedido e remove definitivamente o registo do sistema.",
+     *     description="Aprova o pedido e remove o registo (soft delete) com os dados sensíveis mascarados.",
      *     tags={"Pedidos de Exclusão"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
@@ -86,8 +86,8 @@ class DeletionRequestController extends Controller
             $label = class_basename($record);
             $identifier = $record->company_name ?? $record->reference_number ?? $record->title ?? "#{$record->id}";
 
-            // Permanently remove the record
-            $record->forceDelete();
+            // Soft delete with masked sensitive data (via model deleting event)
+            $record->delete();
 
             $admin = $request->user();
 
