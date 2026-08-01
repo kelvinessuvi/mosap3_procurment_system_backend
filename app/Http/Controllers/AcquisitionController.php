@@ -133,7 +133,7 @@ class AcquisitionController extends Controller
      *     @OA\Response(response=200, description="Aquisição marcada como completa")
      * )
      */
-    public function confirmDelivery(Acquisition $acquisition)
+    public function confirmDelivery(Request $request, Acquisition $acquisition)
     {
         if ($acquisition->status !== 'pending' && $acquisition->status !== 'in_progress') {
             return response()->json(['message' => 'Status inválido para confirmação.'], 400);
