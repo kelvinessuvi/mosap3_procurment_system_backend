@@ -46,6 +46,9 @@
     @else
         <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 24px 0;">
             <p style="margin: 0 0 8px;"><strong>Referência:</strong> {{ $ref }}</p>
+            @if($entity->quotationRequest?->title)
+                <p style="margin: 0 0 8px;"><strong>Título da actividade:</strong> {{ $entity->quotationRequest->title }}</p>
+            @endif
             <p style="margin: 0 0 8px;"><strong>Fornecedor:</strong> {{ $entity->supplier?->company_name }}</p>
             <p style="margin: 0;"><strong>Data prevista de entrega:</strong> {{ \Carbon\Carbon::parse($deadline)->format('d/m/Y') }}</p>
         </div>
@@ -60,7 +63,11 @@
             <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 24px 0;">
                 <p style="margin: 0; color: #991b1b;"><strong>A entrega está ATRASADA há {{ $daysOverdue }} dia(s).</strong></p>
             </div>
-            <p>Recomendamos contactar o fornecedor para actualizar a data de entrega.</p>
+            @if($isSupplier)
+                <p>Recomendamos contactar a equipa de procurement para actualizar a data de entrega.</p>
+            @else
+                <p>Recomendamos contactar o fornecedor para actualizar a data de entrega.</p>
+            @endif
         @endif
     @endif
 

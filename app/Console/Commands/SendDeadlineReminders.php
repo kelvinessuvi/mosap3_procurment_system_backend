@@ -33,7 +33,7 @@ class SendDeadlineReminders extends Command
 
         Acquisition::whereIn('status', ['pending', 'in_progress'])
             ->whereNotNull('expected_delivery_date')
-            ->with(['user', 'supplier'])
+            ->with(['user', 'supplier', 'quotationRequest'])
             ->get()
             ->each(function (Acquisition $acq) use ($today, &$count) {
                 $count += $this->processAcquisition($acq, $today);
@@ -87,6 +87,7 @@ class SendDeadlineReminders extends Command
         $data = [
             'quotation_request_id' => $qr->id,
             'reference_number' => $ref,
+            'title' => $qr->title,
             'deadline' => $deadline->format('Y-m-d H:i:s'),
             'reminder_type' => $trigger,
         ];
@@ -143,6 +144,7 @@ class SendDeadlineReminders extends Command
         $count = 0;
         $ref = $acq->reference_number;
         $delivery = $acq->expected_delivery_date;
+        $activityTitle = $acq->quotationRequest?->title;
         $daysOverdue = max(0, -$today->startOfDay()->diffInDays($delivery->startOfDay(), false));
 
         $title = match ($trigger) {
@@ -153,15 +155,16 @@ class SendDeadlineReminders extends Command
         };
 
         $message = match ($trigger) {
-            't_minus_2' => "Faltam 2 dias para a entrega do pedido #{$ref}. Data prevista: {$delivery->format('d/m/Y')}.",
-            't_minus_1' => "A entrega do pedido #{$ref} está prevista para AMANHÃ ({$delivery->format('d/m/Y')}).",
-            'due_date' => "A entrega do pedido #{$ref} está prevista para HOJE.",
-            'overdue' => "A entrega do pedido #{$ref} está ATRASADA há {$daysOverdue} dia(s). Data prevista era {$delivery->format('d/m/Y')}.",
+            't_minus_2' => "Faltam 2 dias para a entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . ". Data prevista: {$delivery->format('d/m/Y')}.",
+            't_minus_1' => "A entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . " está prevista para AMANHÃ ({$delivery->format('d/m/Y')}).",
+            'due_date' => "A entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . " está prevista para HOJE.",
+            'overdue' => "A entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . " está ATRASADA há {$daysOverdue} dia(s). Data prevista era {$delivery->format('d/m/Y')}.",
         };
 
         $data = [
             'acquisition_id' => $acq->id,
             'reference_number' => $ref,
+            'title' => $activityTitle,
             'expected_delivery_date' => $delivery->format('Y-m-d'),
             'supplier_name' => $acq->supplier?->company_name,
             'reminder_type' => $trigger,
@@ -180,14 +183,24 @@ class SendDeadlineReminders extends Command
 
         $recipients = $this->buildInternalRecipients($acq->user);
 
+        if ($acq->supplier) {
+            $recipients[] = [
+                'address' => $acq->supplier->email,
+                'kind' => 'supplier',
+                'name' => $acq->supplier->company_name,
+                'token' => null,
+            ];
+        }
+
         if (!empty($recipients) && $this->logSent(Acquisition::class, $acq->id, $trigger, 'email', $today)) {
             foreach ($recipients as $recipient) {
                 Mail::to($recipient['address'])->send(new DeadlineReminderMail(
                     entityType: 'delivery',
                     entity: $acq,
                     trigger: $trigger,
-                    recipientKind: 'internal',
+                    recipientKind: $recipient['kind'],
                     recipientName: $recipient['name'],
+                    token: $recipient['token'] ?? null,
                 ));
             }
             $count++;

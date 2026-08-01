@@ -237,6 +237,58 @@ class DeadlineReminderTest extends TestCase
         Mail::assertSent(DeadlineReminderMail::class, fn ($mail) => $mail->hasTo($user->email));
     }
 
+    public function test_acquisition_reminder_sends_delivery_email_to_supplier_even_when_pivot_submitted()
+    {
+        Mail::fake();
+        [$user, $acq] = $this->createAcquisition('in_progress', Carbon::today()->addDays(2));
+
+        $this->artisan('app:send-deadline-reminders')->assertSuccessful();
+
+        $supplier = $acq->supplier;
+        Mail::assertSent(DeadlineReminderMail::class, function ($mail) use ($supplier) {
+            return $mail->hasTo($supplier->email)
+                && $mail->recipientKind === 'supplier'
+                && $mail->entityType === 'delivery'
+                && $mail->recipientName === $supplier->company_name
+                && $mail->token === null;
+        });
+    }
+
+    public function test_acquisition_overdue_reminder_sends_delivery_email_to_supplier()
+    {
+        Mail::fake();
+        [$user, $acq] = $this->createAcquisition('in_progress', Carbon::yesterday());
+
+        $this->artisan('app:send-deadline-reminders')->assertSuccessful();
+
+        Mail::assertSent(DeadlineReminderMail::class, function ($mail) use ($acq) {
+            return $mail->hasTo($acq->supplier->email)
+                && $mail->recipientKind === 'supplier'
+                && $mail->trigger === 'overdue';
+        });
+    }
+
+    public function test_acquisition_notification_includes_activity_title()
+    {
+        [$user, $acq] = $this->createAcquisition('in_progress', Carbon::today()->addDays(2));
+
+        $this->artisan('app:send-deadline-reminders')->assertSuccessful();
+
+        $notification = Notification::first();
+        $this->assertEquals($acq->quotationRequest->title, $notification->data['title']);
+        $this->assertStringContainsString($acq->quotationRequest->title, $notification->message);
+    }
+
+    public function test_quotation_notification_includes_activity_title()
+    {
+        [$user, $qr] = $this->createQuotationRequest('sent', Carbon::today()->addDays(2));
+
+        $this->artisan('app:send-deadline-reminders')->assertSuccessful();
+
+        $notification = Notification::first();
+        $this->assertEquals($qr->title, $notification->data['title']);
+    }
+
     public function test_far_future_deadlines_are_not_reminded()
     {
         $this->createQuotationRequest('sent', Carbon::today()->addDays(5));
