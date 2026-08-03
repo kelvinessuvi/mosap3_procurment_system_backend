@@ -99,7 +99,7 @@ class QuotationResponseController extends Controller
         // Send email to supplier
         $quotationResponse->load('quotationSupplier.supplier', 'quotationSupplier.quotationRequest');
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
-            ->send(new ProposalApprovedMail($quotationResponse));
+            ->send(new ProposalApprovedMail($quotationResponse, $request->user()));
 
         AuditLog::log('Aprovação de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->company_name} foi aprovada", [
             'quotation_response_id' => $quotationResponse->id,
@@ -155,7 +155,7 @@ class QuotationResponseController extends Controller
         // Send email to supplier
         $quotationResponse->load('quotationSupplier.supplier', 'quotationSupplier.quotationRequest');
         Mail::to($quotationResponse->quotationSupplier->supplier->email)
-            ->send(new ProposalRejectedMail($quotationResponse));
+            ->send(new ProposalRejectedMail($quotationResponse, $request->user()));
 
         AuditLog::log('Rejeição de proposta', "Proposta #{$quotationResponse->id} do fornecedor {$quotationResponse->quotationSupplier->supplier->company_name} foi rejeitada", [
             'quotation_response_id' => $quotationResponse->id,
@@ -209,7 +209,7 @@ class QuotationResponseController extends Controller
             'message' => 'required|string',
         ]);
 
-        return DB::transaction(function () use ($validated, $quotationResponse) {
+        return DB::transaction(function () use ($validated, $quotationResponse, $request) {
             $quotationResponse->update([
                 'status' => 'needs_revision',
                 'user_id' => auth()->id(), // Reviewer
@@ -243,7 +243,8 @@ class QuotationResponseController extends Controller
             Mail::to($qs->supplier->email)->send(new NegotiationNotificationMail(
                 $qs->quotationRequest,
                 $notification,
-                $newToken
+                $newToken,
+                $request->user()
             ));
             
             // Log History action? 

@@ -17,12 +17,14 @@ class NegotiationNotificationMail extends Mailable
     public $quotation;
     public $notification;
     public $token;
+    public $senderUser;
 
-    public function __construct(QuotationRequest $quotation, NegotiationNotification $notification, string $token)
+    public function __construct(QuotationRequest $quotation, NegotiationNotification $notification, string $token, $senderUser = null)
     {
         $this->quotation = $quotation;
         $this->notification = $notification;
         $this->token = $token;
+        $this->senderUser = $senderUser;
     }
 
     public function envelope(): Envelope

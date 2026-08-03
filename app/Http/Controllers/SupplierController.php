@@ -511,7 +511,7 @@ class SupplierController extends Controller
             'user_id' => $request->user()->id,
         ]);
 
-        Mail::to($supplier->email)->send(new SupplierInvitationMail($supplier));
+        Mail::to($supplier->email)->send(new SupplierInvitationMail($supplier, $request->user()));
 
         AuditLog::log('Convite para registo', "Fornecedor '{$supplier->email}' foi convidado para se registar", [
             'supplier_id' => $supplier->id,
@@ -536,7 +536,7 @@ class SupplierController extends Controller
      *     @OA\Response(response=404, description="Fornecedor não encontrado")
      * )
      */
-    public function approve(Supplier $supplier)
+    public function approve(Request $request, Supplier $supplier)
     {
         if ($supplier->registration_status !== 'registered') {
             return response()->json([
@@ -552,7 +552,7 @@ class SupplierController extends Controller
 
         $supplier->update(['is_active' => true]);
 
-        Mail::to($supplier->email)->send(new SupplierApprovedMail($supplier));
+        Mail::to($supplier->email)->send(new SupplierApprovedMail($supplier, $request->user()));
 
         AuditLog::log('Aprovação de fornecedor', "Fornecedor '{$supplier->company_name}' foi aprovado e ativado", [
             'supplier_id' => $supplier->id,

@@ -14,10 +14,12 @@ class SupplierInvitationMail extends Mailable
     use Queueable, SerializesModels;
 
     public $supplier;
+    public $senderUser;
 
-    public function __construct(Supplier $supplier)
+    public function __construct(Supplier $supplier, $senderUser = null)
     {
         $this->supplier = $supplier;
+        $this->senderUser = $senderUser;
     }
 
     public function envelope(): Envelope

@@ -17,15 +17,17 @@ class ProposalApprovedMail extends Mailable
     public $quotationResponse;
     public $supplier;
     public $quotationRequest;
+    public $senderUser;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(QuotationResponse $quotationResponse)
+    public function __construct(QuotationResponse $quotationResponse, $senderUser = null)
     {
         $this->quotationResponse = $quotationResponse;
         $this->supplier = $quotationResponse->quotationSupplier->supplier;
         $this->quotationRequest = $quotationResponse->quotationSupplier->quotationRequest;
+        $this->senderUser = $senderUser;
     }
 
     /**
