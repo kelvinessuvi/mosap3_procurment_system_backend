@@ -83,11 +83,17 @@ class DeletionRequestController extends Controller
             ]);
 
             $record = $deletionRequest->requestable;
-            $label = class_basename($record);
-            $identifier = $record->company_name ?? $record->reference_number ?? $record->title ?? "#{$record->id}";
+            $label = $record ? class_basename($record) : class_basename($deletionRequest->requestable_type);
+            $identifier = $record?->company_name
+                ?? $record?->reference_number
+                ?? $record?->title
+                ?? $record?->id
+                ?? '#' . $deletionRequest->requestable_id;
 
             // Soft delete with masked sensitive data (via model deleting event)
-            $record->delete();
+            if ($record) {
+                $record->delete();
+            }
 
             $admin = $request->user();
 
@@ -96,7 +102,7 @@ class DeletionRequestController extends Controller
                 'requestable_type' => $deletionRequest->requestable_type,
                 'requestable_id' => $deletionRequest->requestable_id,
                 'reason' => $deletionRequest->reason,
-                'requester_name' => $deletionRequest->requester->name,
+                'requester_name' => $deletionRequest->requester?->name ?? 'Utilizador',
             ], $admin);
 
             // Notify requester that their request was approved
@@ -156,8 +162,12 @@ class DeletionRequestController extends Controller
             ]);
 
             $record = $deletionRequest->requestable;
-            $label = class_basename($record);
-            $identifier = $record->company_name ?? $record->reference_number ?? $record->title ?? "#{$record->id}";
+            $label = $record ? class_basename($record) : class_basename($deletionRequest->requestable_type);
+            $identifier = $record?->company_name
+                ?? $record?->reference_number
+                ?? $record?->title
+                ?? $record?->id
+                ?? '#' . $deletionRequest->requestable_id;
 
             $admin = $request->user();
 
@@ -167,7 +177,7 @@ class DeletionRequestController extends Controller
                 'requestable_id' => $deletionRequest->requestable_id,
                 'reason' => $deletionRequest->reason,
                 'rejection_reason' => $validated['rejection_reason'],
-                'requester_name' => $deletionRequest->requester->name,
+                'requester_name' => $deletionRequest->requester?->name ?? 'Utilizador',
             ], $admin);
 
             // Notify requester that their request was rejected

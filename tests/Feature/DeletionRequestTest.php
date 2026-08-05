@@ -175,6 +175,88 @@ class DeletionRequestTest extends TestCase
         ]);
     }
 
+    public function test_reject_keeps_record_and_updates_status()
+    {
+        $admin = $this->admin();
+        $technician = $this->technician();
+        $supplier = Supplier::factory()->create();
+
+        $deletionRequest = DeletionRequest::create([
+            'requestable_type' => Supplier::class,
+            'requestable_id' => $supplier->id,
+            'requested_by' => $technician->id,
+            'reason' => 'Fornecedor inactivo',
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/deletion-requests/{$deletionRequest->id}/reject", [
+                'rejection_reason' => 'Contrato ativo',
+            ])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('deletion_requests', [
+            'id' => $deletionRequest->id,
+            'status' => 'rejected',
+            'rejection_reason' => 'Contrato ativo',
+        ]);
+        // Record intact
+        $this->assertDatabaseHas('suppliers', [
+            'id' => $supplier->id,
+            'company_name' => $supplier->company_name,
+        ]);
+    }
+
+    public function test_reject_works_when_requestable_is_soft_deleted()
+    {
+        $admin = $this->admin();
+        $technician = $this->technician();
+        $supplier = Supplier::factory()->create();
+        $supplier->delete();
+
+        $deletionRequest = DeletionRequest::create([
+            'requestable_type' => Supplier::class,
+            'requestable_id' => $supplier->id,
+            'requested_by' => $technician->id,
+            'reason' => 'Fornecedor inactivo',
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/deletion-requests/{$deletionRequest->id}/reject", [
+                'rejection_reason' => 'Pedido inválido',
+            ])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('deletion_requests', [
+            'id' => $deletionRequest->id,
+            'status' => 'rejected',
+        ]);
+        $this->assertSoftDeleted('suppliers', ['id' => $supplier->id]);
+    }
+
+    public function test_approve_works_when_requestable_is_soft_deleted()
+    {
+        $admin = $this->admin();
+        $technician = $this->technician();
+        $supplier = Supplier::factory()->create();
+        $supplier->delete();
+
+        $deletionRequest = DeletionRequest::create([
+            'requestable_type' => Supplier::class,
+            'requestable_id' => $supplier->id,
+            'requested_by' => $technician->id,
+            'reason' => 'Duplicado',
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/deletion-requests/{$deletionRequest->id}/approve")
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('deletion_requests', [
+            'id' => $deletionRequest->id,
+            'status' => 'approved',
+        ]);
+    }
+
     public function test_approve_rejects_already_processed_request()
     {
         $admin = $this->admin();
