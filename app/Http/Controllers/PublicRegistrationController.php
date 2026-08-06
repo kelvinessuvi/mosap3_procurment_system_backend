@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Supplier;
 use App\Models\AuditLog;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,7 +38,43 @@ class PublicRegistrationController extends Controller
             'supplier' => $supplier,
             'token' => $token,
             'categories' => $categories,
+            'provinces' => $this->fetchProvinces(),
         ]);
+    }
+
+    private function fetchProvinces(): array
+    {
+        try {
+            $cached = Cache::get('angola_provinces');
+            if (is_array($cached)) {
+                return $cached;
+            }
+
+            $response = Http::timeout(10)
+                ->get('https://angolaprovinciasapi.ggwp.com.br/api/v1/provincias')
+                ->throw();
+
+            $provinces = collect($response->json('data', []))->map(function ($province) {
+                return [
+                    'nome' => $province['nome'] ?? null,
+                    'municipios' => collect($province['municipios'] ?? [])
+                        ->pluck('nome')
+                        ->filter()
+                        ->values()
+                        ->all(),
+                ];
+            })->filter(fn ($province) => $province['nome'])->values()->all();
+
+            if (count($provinces) > 0) {
+                Cache::put('angola_provinces', $provinces, now()->addHours(24));
+            }
+
+            return $provinces;
+        } catch (ConnectionException|\Throwable $e) {
+            Log::warning('Falha ao buscar províncias de Angola API', ['error' => $e->getMessage()]);
+
+            return [];
+        }
     }
 
     /**

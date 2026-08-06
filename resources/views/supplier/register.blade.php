@@ -68,17 +68,38 @@
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Província *</label>
-                        <input type="text" name="province" value="{{ old('province') }}" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                    </div>
+                    @if (count($provinces) > 0)
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Província *</label>
+                            <select name="province" id="province" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                <option value="">Selecione a província...</option>
+                                @foreach ($provinces as $province)
+                                    <option value="{{ $province['nome'] }}" @selected(old('province') === $province['nome'])>{{ $province['nome'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Município *</label>
-                        <input type="text" name="municipality" value="{{ old('municipality') }}" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                    </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Município *</label>
+                            <select name="municipality" id="municipality" required disabled
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                <option value="">Primeiro selecione a província...</option>
+                            </select>
+                        </div>
+                    @else
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Província *</label>
+                            <input type="text" name="province" value="{{ old('province') }}" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Município *</label>
+                            <input type="text" name="municipality" value="{{ old('municipality') }}" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        </div>
+                    @endif
 
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
@@ -162,5 +183,43 @@
             </div>
         </form>
     </div>
+
+    @if (count($provinces) > 0)
+        <script>
+            const provinces = @json($provinces);
+            const provinceSelect = document.getElementById('province');
+            const municipalitySelect = document.getElementById('municipality');
+
+            function populateMunicipalities() {
+                const province = provinceSelect.value;
+                const selected = oldMunicipality;
+
+                municipalitySelect.innerHTML = '';
+
+                const municipios = provinces.find(p => p.nome === province)?.municipios || [];
+
+                if (!province) {
+                    municipalitySelect.disabled = true;
+                    municipalitySelect.innerHTML = '<option value="">Primeiro selecione a província...</option>';
+                    return;
+                }
+
+                municipios.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m;
+                    option.textContent = m;
+                    if (m === selected) option.selected = true;
+                    municipalitySelect.appendChild(option);
+                });
+
+                municipalitySelect.disabled = false;
+            }
+
+            const oldMunicipality = @json(old('municipality'));
+
+            provinceSelect.addEventListener('change', populateMunicipalities);
+            populateMunicipalities();
+        </script>
+    @endif
 </body>
 </html>
