@@ -62,7 +62,7 @@ class PublicRegistrationController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-      *                 required={"company_name", "phone", "nif", "activity_type", "province", "municipality", "commercial_certificate", "nif_proof", "categories"},
+       *                 required={"company_name", "phone", "nif", "province", "municipality", "commercial_certificate", "nif_proof", "categories"},
       *                 @OA\Property(property="company_name", type="string"),
      *                 @OA\Property(property="phone", type="string"),
      *                 @OA\Property(property="nif", type="string"),
@@ -101,7 +101,7 @@ class PublicRegistrationController extends Controller
             'phone' => 'required|string|max:20',
             'alt_phone' => 'nullable|string|max:20',
             'nif' => 'required|string|unique:suppliers,nif,' . $supplier->id,
-            'activity_type' => 'required|string',
+            'activity_type' => 'nullable|string',
             'province' => 'required|string',
             'municipality' => 'required|string',
             'address' => 'nullable|string',
@@ -131,7 +131,9 @@ class PublicRegistrationController extends Controller
             'commerce' => 'commerce',
         ];
 
-        $validated['activity_type'] = $activityMap[$validated['activity_type']] ?? 'service';
+        $validated['activity_type'] = !empty($validated['activity_type'])
+            ? ($activityMap[$validated['activity_type']] ?? 'service')
+            : null;
 
         $uploadPath = 'suppliers/documents';
 

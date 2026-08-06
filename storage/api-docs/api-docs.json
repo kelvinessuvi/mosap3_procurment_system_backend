@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "https://api.mosap3.yetuware.it.ao/",
+            "url": "http://localhost:8000",
             "description": "Servidor da API"
         }
     ],
@@ -1652,7 +1652,6 @@
                                     "company_name",
                                     "phone",
                                     "nif",
-                                    "activity_type",
                                     "province",
                                     "municipality",
                                     "commercial_certificate",
