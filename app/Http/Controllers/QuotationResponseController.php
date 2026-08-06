@@ -212,7 +212,7 @@ class QuotationResponseController extends Controller
         return DB::transaction(function () use ($validated, $quotationResponse, $request) {
             $quotationResponse->update([
                 'status' => 'needs_revision',
-                'user_id' => auth()->id(), // Reviewer
+                'user_id' => $request->user()->id, // Reviewer
             ]);
 
             $qs = $quotationResponse->quotationSupplier;
@@ -244,6 +244,7 @@ class QuotationResponseController extends Controller
                 $qs->quotationRequest,
                 $notification,
                 $newToken,
+                $qs->supplier,
                 $request->user()
             ));
             
@@ -254,7 +255,7 @@ class QuotationResponseController extends Controller
                 'total_amount' => $quotationResponse->items->sum('unit_price'), // approx
                 'action' => 'revised', // requested revision
                 'action_notes' => $validated['message'],
-                'user_id' => auth()->id(),
+                'user_id' => $request->user()->id,
             ]);
             
             $this->updateSupplierStatistics($qs->supplier_id);
@@ -266,7 +267,7 @@ class QuotationResponseController extends Controller
                 'quotation_request_id' => $qs->quotation_request_id,
                 'reason' => $validated['reason'],
                 'message' => $validated['message'],
-            ], auth()->user());
+            ], $request->user());
 
             // Create notification for quotation request creator
             Notification::create([

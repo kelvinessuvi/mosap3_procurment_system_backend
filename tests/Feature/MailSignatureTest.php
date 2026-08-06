@@ -71,6 +71,8 @@ class MailSignatureTest extends TestCase
             ->assertStatus(201);
 
         Mail::assertSent(SupplierInvitationMail::class, function ($mail) use ($admin) {
+            $this->assertIsString($mail->render());
+            $this->assertStringContainsString($admin->name, $mail->render());
             return $mail->senderUser !== null && $mail->senderUser->id === $admin->id;
         });
     }
@@ -89,6 +91,8 @@ class MailSignatureTest extends TestCase
             ->assertStatus(200);
 
         Mail::assertSent(SupplierApprovedMail::class, function ($mail) use ($admin) {
+            $this->assertIsString($mail->render());
+            $this->assertNotNull($mail->supplier);
             return $mail->senderUser !== null && $mail->senderUser->id === $admin->id;
         });
     }
@@ -104,6 +108,8 @@ class MailSignatureTest extends TestCase
             ->assertStatus(200);
 
         Mail::assertSent(ProposalApprovedMail::class, function ($mail) use ($admin) {
+            $this->assertIsString($mail->render());
+            $this->assertNotNull($mail->supplier);
             return $mail->senderUser !== null && $mail->senderUser->id === $admin->id;
         });
     }
@@ -119,6 +125,8 @@ class MailSignatureTest extends TestCase
             ->assertStatus(200);
 
         Mail::assertSent(ProposalRejectedMail::class, function ($mail) use ($admin) {
+            $this->assertIsString($mail->render());
+            $this->assertNotNull($mail->supplier);
             return $mail->senderUser !== null && $mail->senderUser->id === $admin->id;
         });
     }
@@ -137,6 +145,10 @@ class MailSignatureTest extends TestCase
             ->assertStatus(200);
 
         Mail::assertSent(NegotiationNotificationMail::class, function ($mail) use ($admin) {
+            $rendered = $mail->render();
+            $this->assertIsString($rendered);
+            $this->assertStringContainsString($mail->supplier->company_name, $rendered);
+            $this->assertStringContainsString($mail->token, $rendered);
             return $mail->senderUser !== null && $mail->senderUser->id === $admin->id;
         });
     }

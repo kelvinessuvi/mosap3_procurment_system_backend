@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\NegotiationNotification;
 use App\Models\QuotationRequest;
+use App\Models\Supplier;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -17,13 +18,15 @@ class NegotiationNotificationMail extends Mailable
     public $quotation;
     public $notification;
     public $token;
+    public $supplier;
     public $senderUser;
 
-    public function __construct(QuotationRequest $quotation, NegotiationNotification $notification, string $token, $senderUser = null)
+    public function __construct(QuotationRequest $quotation, NegotiationNotification $notification, string $token, Supplier $supplier, $senderUser = null)
     {
         $this->quotation = $quotation;
         $this->notification = $notification;
         $this->token = $token;
+        $this->supplier = $supplier;
         $this->senderUser = $senderUser;
     }
 
