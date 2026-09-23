@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Menu;
 use App\Models\User;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -54,11 +55,19 @@ class UserController extends Controller
      *             @OA\Property(property="is_active", type="boolean", example=true)
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Usuário criado"),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Usuário criado. É enviado um código de confirmação de 6 dígitos para o endereço indicado.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="user", type="object"),
+     *             @OA\Property(property="verification_email_sent", type="boolean"),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
      *     @OA\Response(response=422, description="Erro de validação")
      * )
      */
-    public function store(Request $request)
+    public function store(Request $request, EmailVerificationService $verification)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -69,10 +78,20 @@ class UserController extends Controller
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+        $validated['email_verified_at'] = null;
 
         $user = User::create($validated);
 
-        return response()->json($user, 201);
+        // A conta só fica utilizável depois de o utilizador confirmar o código enviado por email.
+        $sent = $verification->send($user);
+
+        return response()->json([
+            'user' => $user->fresh(),
+            'verification_email_sent' => $sent,
+            'message' => $sent
+                ? 'Utilizador criado. Foi enviado um código de confirmação para ' . $user->email . '.'
+                : 'Utilizador criado, mas não foi possível enviar o código de confirmação. Use a opção de reenvio.',
+        ], 201);
     }
 
     /**
@@ -105,7 +124,7 @@ class UserController extends Controller
      *     @OA\Response(response=422, description="Erro de validação")
      * )
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id, EmailVerificationService $verification)
     {
         $user = User::findOrFail($id);
 
@@ -123,9 +142,16 @@ class UserController extends Controller
             unset($validated['password']);
         }
 
+        $emailChanged = isset($validated['email']) && $validated['email'] !== $user->email;
+
         $user->update($validated);
 
-        return response()->json($user);
+        // Novo endereço de email volta a exigir confirmação.
+        if ($emailChanged) {
+            $verification->send($user);
+        }
+
+        return response()->json($user->fresh());
     }
 
     /**

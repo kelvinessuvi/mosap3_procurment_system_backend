@@ -112,4 +112,25 @@ return [
 
     'password_timeout' => 10800,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | Minutos durante os quais o código de 6 dígitos enviado por email permanece
+    | válido, tanto para a confirmação de conta como para a recuperação de senha.
+    | "token_expire" é a validade do token intermédio devolvido depois de o
+    | código de recuperação ser validado com sucesso.
+    |
+    */
+
+    'verification' => [
+        'expire' => (int) env('AUTH_VERIFICATION_CODE_EXPIRE_MINUTES', 30),
+    ],
+
+    'reset_code' => [
+        'expire' => (int) env('AUTH_PASSWORD_CODE_EXPIRE_MINUTES', 15),
+        'token_expire' => (int) env('AUTH_PASSWORD_TOKEN_EXPIRE_MINUTES', 15),
+    ],
+
 ];

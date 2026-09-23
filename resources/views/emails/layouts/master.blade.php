@@ -89,6 +89,19 @@
             border-top: 1px solid #e5e7eb;
             margin: 24px 0;
         }
+        .code-box {
+            background-color: #f3f4f6;
+            border: 1px dashed #148742;
+            border-radius: 8px;
+            color: #148742;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 34px;
+            font-weight: bold;
+            letter-spacing: 10px;
+            margin: 24px auto;
+            padding: 18px 12px;
+            text-align: center;
+        }
         .table {
             width: 100%;
             border-collapse: collapse;

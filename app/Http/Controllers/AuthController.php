@@ -38,7 +38,7 @@ class AuthController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=422, description="Erro de validação"),
-     *     @OA\Response(response=403, description="Conta inativa")
+     *     @OA\Response(response=403, description="Conta inativa ou email por confirmar")
      * )
      */
     public function login(Request $request)
@@ -59,6 +59,13 @@ class AuthController extends Controller
 
         if (! $user->is_active) {
              return response()->json(['message' => 'A sua conta está inativa. Contacte o administrador.'], 403);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Precisa de confirmar o seu email antes de iniciar sessão. Verifique a sua caixa de entrada.',
+                'email_verified' => false,
+            ], 403);
         }
 
         // Revoke all tokens... or just create a new one? Usually for simple auth just create new.

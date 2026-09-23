@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "https://api.mosap3.yetuware.it.ao/",
+            "url": "http://localhost:8000",
             "description": "Servidor da API"
         }
     ],
@@ -389,7 +389,7 @@
                         "description": "Erro de validação"
                     },
                     "403": {
-                        "description": "Conta inativa"
+                        "description": "Conta inativa ou email por confirmar"
                     }
                 }
             }
@@ -884,6 +884,135 @@
                 ]
             }
         },
+        "/api/email/verify": {
+            "post": {
+                "tags": [
+                    "Confirmação de Email"
+                ],
+                "summary": "Confirmar email com o código de 6 dígitos",
+                "operationId": "d8944ae979d480f3e3449cf2f91c6e2a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "joao.silva@mosap3.ao"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "482915"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email confirmado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "email_verified": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Código inválido, expirado ou tentativas esgotadas"
+                    }
+                }
+            }
+        },
+        "/api/email/resend-verification": {
+            "post": {
+                "tags": [
+                    "Confirmação de Email"
+                ],
+                "summary": "Reenviar o código de confirmação (pelo próprio utilizador)",
+                "operationId": "b88742319bddc83d2ca6a6f17de4fff1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Se a conta existir e estiver por confirmar, foi enviado um novo código"
+                    },
+                    "429": {
+                        "description": "Código pedido há menos de 60 segundos"
+                    }
+                }
+            }
+        },
+        "/api/users/{user}/resend-verification": {
+            "post": {
+                "tags": [
+                    "Confirmação de Email"
+                ],
+                "summary": "Reenviar o código de confirmação (Admin)",
+                "operationId": "77556076b242b26e5ae025fcec326fce",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Código reenviado"
+                    },
+                    "422": {
+                        "description": "Email já confirmado"
+                    },
+                    "500": {
+                        "description": "Falha no envio do email"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/supplier-evaluations": {
             "get": {
                 "tags": [
@@ -1346,6 +1475,178 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/password/forgot": {
+            "post": {
+                "tags": [
+                    "Recuperação de Senha"
+                ],
+                "summary": "Pedir código de recuperação de senha",
+                "operationId": "124cf45cab0d4ad6b9ec6ba62e9f81c1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "joao.silva@mosap3.ao"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Se a conta existir, foi enviado um código de 6 dígitos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "expires_in_minutes": {
+                                            "type": "integer",
+                                            "example": 15
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Código pedido há menos de 60 segundos"
+                    }
+                }
+            }
+        },
+        "/api/password/verify-code": {
+            "post": {
+                "tags": [
+                    "Recuperação de Senha"
+                ],
+                "summary": "Validar o código de recuperação",
+                "description": "Passo opcional: confirma o código e devolve um token de curta duração que autoriza a troca de senha, para que o utilizador não tenha de reintroduzir o código.",
+                "operationId": "038b0f780ec4e0875c3692e02f8414e2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "482915"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Código válido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "token": {
+                                            "type": "string"
+                                        },
+                                        "expires_in_minutes": {
+                                            "type": "integer",
+                                            "example": 15
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Código inválido, expirado ou tentativas esgotadas"
+                    }
+                }
+            }
+        },
+        "/api/password/reset": {
+            "post": {
+                "tags": [
+                    "Recuperação de Senha"
+                ],
+                "summary": "Definir a nova senha",
+                "description": "Aceita o código de 6 dígitos directamente, ou o token devolvido por /api/password/verify-code.",
+                "operationId": "a845907be08eb3116f2a3df0450c5454",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "code": {
+                                        "description": "Obrigatório se não enviar 'token'",
+                                        "type": "string",
+                                        "example": "482915"
+                                    },
+                                    "token": {
+                                        "description": "Obrigatório se não enviar 'code'",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "novaSenha123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "novaSenha123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Senha redefinida com sucesso"
+                    },
+                    "422": {
+                        "description": "Código/token inválido ou expirado"
+                    }
+                }
             }
         },
         "/api/products": {
@@ -3106,7 +3407,25 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Usuário criado"
+                        "description": "Usuário criado. É enviado um código de confirmação de 6 dígitos para o endereço indicado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object"
+                                        },
+                                        "verification_email_sent": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "description": "Erro de validação"
@@ -3363,6 +3682,10 @@
             "description": "Visualização de Documentos de Fornecedores e Propostas"
         },
         {
+            "name": "Confirmação de Email",
+            "description": "Confirmação do endereço de email por código de 6 dígitos"
+        },
+        {
             "name": "Avaliações de Fornecedores",
             "description": "Métricas de Desempenho Automatizadas"
         },
@@ -3373,6 +3696,10 @@
         {
             "name": "Notificações",
             "description": "Gestão de Notificações In-App"
+        },
+        {
+            "name": "Recuperação de Senha",
+            "description": "Recuperação de conta por código de 6 dígitos enviado por email"
         },
         {
             "name": "Catálogo de Produtos",

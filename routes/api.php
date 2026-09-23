@@ -37,6 +37,20 @@ Route::get('/login', function () {
     return response()->json(['message' => 'Unauthenticated. Please login.'], 401);
 })->name('login');
 
+// Confirmação de email por código de 6 dígitos (público)
+Route::post('/email/verify', [\App\Http\Controllers\EmailVerificationController::class, 'verify'])
+    ->middleware('throttle:10,1');
+Route::post('/email/resend-verification', [\App\Http\Controllers\EmailVerificationController::class, 'resendPublic'])
+    ->middleware('throttle:6,1');
+
+// Recuperação de conta por código de 6 dígitos (público)
+Route::post('/password/forgot', [\App\Http\Controllers\PasswordResetController::class, 'forgot'])
+    ->middleware('throttle:6,1');
+Route::post('/password/verify-code', [\App\Http\Controllers\PasswordResetController::class, 'verifyCode'])
+    ->middleware('throttle:10,1');
+Route::post('/password/reset', [\App\Http\Controllers\PasswordResetController::class, 'reset'])
+    ->middleware('throttle:10,1');
+
 // Public Quotation Routes (Token based)
 Route::get('/quotation/{token}', [\App\Http\Controllers\PublicQuotationController::class, 'show']);
 Route::post('/quotation/{token}/submit', [\App\Http\Controllers\PublicQuotationController::class, 'submit']);
@@ -121,6 +135,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
+        Route::post('users/{user}/resend-verification', [\App\Http\Controllers\EmailVerificationController::class, 'resend']);
         Route::apiResource('users', UserController::class);
 
         // Manage Categories

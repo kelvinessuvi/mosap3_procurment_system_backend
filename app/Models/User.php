@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'email_verified_at',
     ];
 
     /**
@@ -46,7 +47,24 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_active' => 'boolean',
     ];
+
+    /**
+     * O email desta conta já foi confirmado?
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return ! is_null($this->email_verified_at);
+    }
+
+    /**
+     * Marca o email como confirmado.
+     */
+    public function markEmailAsVerified(): void
+    {
+        $this->forceFill(['email_verified_at' => now()])->save();
+    }
 
     /**
      * Get the user's notifications
