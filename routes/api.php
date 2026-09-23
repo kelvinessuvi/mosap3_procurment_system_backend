@@ -37,8 +37,10 @@ Route::get('/login', function () {
     return response()->json(['message' => 'Unauthenticated. Please login.'], 401);
 })->name('login');
 
-// Confirmação de email por código de 6 dígitos (público)
-Route::post('/email/verify', [\App\Http\Controllers\EmailVerificationController::class, 'verify'])
+// Activação de conta: validar o token e definir a senha (público)
+Route::post('/email/check-token', [\App\Http\Controllers\EmailVerificationController::class, 'checkToken'])
+    ->middleware('throttle:10,1');
+Route::post('/email/verify', [\App\Http\Controllers\EmailVerificationController::class, 'verifyApi'])
     ->middleware('throttle:10,1');
 Route::post('/email/resend-verification', [\App\Http\Controllers\EmailVerificationController::class, 'resendPublic'])
     ->middleware('throttle:6,1');

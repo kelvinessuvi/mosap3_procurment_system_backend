@@ -38,7 +38,7 @@ class AuthController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=422, description="Erro de validação"),
-     *     @OA\Response(response=403, description="Conta inativa ou email por confirmar")
+     *     @OA\Response(response=403, description="Conta inativa ou por activar")
      * )
      */
     public function login(Request $request)
@@ -63,7 +63,7 @@ class AuthController extends Controller
 
         if (! $user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'Precisa de confirmar o seu email antes de iniciar sessão. Verifique a sua caixa de entrada.',
+                'message' => 'Precisa de activar a conta antes de iniciar sessão. Abra o link que enviámos para o seu email e defina a sua senha.',
                 'email_verified' => false,
             ], 403);
         }

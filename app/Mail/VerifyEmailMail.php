@@ -14,20 +14,20 @@ class VerifyEmailMail extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
-    public $code;
-    public $expiresInMinutes;
+    public $verificationUrl;
+    public $expiresInHours;
 
-    public function __construct(User $user, string $code, int $expiresInMinutes)
+    public function __construct(User $user, string $verificationUrl, int $expiresInHours)
     {
         $this->user = $user;
-        $this->code = $code;
-        $this->expiresInMinutes = $expiresInMinutes;
+        $this->verificationUrl = $verificationUrl;
+        $this->expiresInHours = $expiresInHours;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Código de confirmação: ' . $this->code . ' - MOSAP3 Procurement',
+            subject: 'Defina a sua senha e active a conta - MOSAP3 Procurement',
         );
     }
 

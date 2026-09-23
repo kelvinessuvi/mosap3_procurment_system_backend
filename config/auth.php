@@ -114,18 +114,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Email Verification
+    | Activação de Conta e Recuperação de Senha
     |--------------------------------------------------------------------------
     |
-    | Minutos durante os quais o código de 6 dígitos enviado por email permanece
-    | válido, tanto para a confirmação de conta como para a recuperação de senha.
-    | "token_expire" é a validade do token intermédio devolvido depois de o
-    | código de recuperação ser validado com sucesso.
+    | "verification.expire" são as HORAS durante as quais o link de activação de
+    | conta permanece válido.
+    |
+    | "reset_code" é a recuperação de senha, em MINUTOS: "expire" é a validade do
+    | código de 6 dígitos e "token_expire" a do token intermédio devolvido depois
+    | de esse código ser validado com sucesso.
     |
     */
 
     'verification' => [
-        'expire' => (int) env('AUTH_VERIFICATION_CODE_EXPIRE_MINUTES', 30),
+        'expire' => (int) env('AUTH_VERIFICATION_LINK_EXPIRE_HOURS', 48),
     ],
 
     'reset_code' => [

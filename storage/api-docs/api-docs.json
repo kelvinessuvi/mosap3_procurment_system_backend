@@ -389,7 +389,7 @@
                         "description": "Erro de validação"
                     },
                     "403": {
-                        "description": "Conta inativa ou email por confirmar"
+                        "description": "Conta inativa ou por activar"
                     }
                 }
             }
@@ -884,31 +884,26 @@
                 ]
             }
         },
-        "/api/email/verify": {
+        "/api/email/check-token": {
             "post": {
                 "tags": [
-                    "Confirmação de Email"
+                    "Activação de Conta"
                 ],
-                "summary": "Confirmar email com o código de 6 dígitos",
-                "operationId": "d8944ae979d480f3e3449cf2f91c6e2a",
+                "summary": "Validar o token do link de activação",
+                "description": "Permite ao frontend alojar a sua própria página de definição de senha: devolve a quem pertence o link antes de mostrar o formulário. Não consome o token.",
+                "operationId": "ce6b062a0f2061a7eac7d49ea70afa6c",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "email",
-                                    "code"
+                                    "token"
                                 ],
                                 "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "joao.silva@mosap3.ao"
-                                    },
-                                    "code": {
-                                        "type": "string",
-                                        "example": "482915"
+                                    "token": {
+                                        "description": "Token presente no link do email",
+                                        "type": "string"
                                     }
                                 },
                                 "type": "object"
@@ -918,7 +913,76 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Email confirmado",
+                        "description": "Token válido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "valid": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "410": {
+                        "description": "Link inválido, já usado ou expirado"
+                    }
+                }
+            }
+        },
+        "/api/email/verify": {
+            "post": {
+                "tags": [
+                    "Activação de Conta"
+                ],
+                "summary": "Definir a senha e activar a conta",
+                "description": "Alternativa à rota web /email/verify/{token}, para o caso de ser o frontend a alojar a página de definição de senha.",
+                "operationId": "47b28d6b6ec3f214da049776df929f6e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "description": "Token presente no link do email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "aMinhaSenha123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "aMinhaSenha123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Conta activada e senha definida",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -936,8 +1000,11 @@
                             }
                         }
                     },
+                    "410": {
+                        "description": "Link inválido, já usado ou expirado"
+                    },
                     "422": {
-                        "description": "Código inválido, expirado ou tentativas esgotadas"
+                        "description": "Senha inválida"
                     }
                 }
             }
@@ -945,9 +1012,9 @@
         "/api/email/resend-verification": {
             "post": {
                 "tags": [
-                    "Confirmação de Email"
+                    "Activação de Conta"
                 ],
-                "summary": "Reenviar o código de confirmação (pelo próprio utilizador)",
+                "summary": "Reenviar o link de activação (pelo próprio utilizador)",
                 "operationId": "b88742319bddc83d2ca6a6f17de4fff1",
                 "requestBody": {
                     "required": true,
@@ -970,10 +1037,10 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Se a conta existir e estiver por confirmar, foi enviado um novo código"
+                        "description": "Se a conta existir e estiver por activar, foi enviado um novo link"
                     },
                     "429": {
-                        "description": "Código pedido há menos de 60 segundos"
+                        "description": "Link pedido há menos de 60 segundos"
                     }
                 }
             }
@@ -981,9 +1048,9 @@
         "/api/users/{user}/resend-verification": {
             "post": {
                 "tags": [
-                    "Confirmação de Email"
+                    "Activação de Conta"
                 ],
-                "summary": "Reenviar o código de confirmação (Admin)",
+                "summary": "Reenviar o link de activação (Admin)",
                 "operationId": "77556076b242b26e5ae025fcec326fce",
                 "parameters": [
                     {
@@ -997,10 +1064,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Código reenviado"
+                        "description": "Link reenviado"
                     },
                     "422": {
-                        "description": "Email já confirmado"
+                        "description": "Conta já activada"
                     },
                     "500": {
                         "description": "Falha no envio do email"
@@ -3360,6 +3427,7 @@
                     "Usuários"
                 ],
                 "summary": "Criar novo usuário (Admin/Técnico)",
+                "description": "O administrador não define a senha. É enviado um link de activação ao utilizador, que define a sua própria senha no primeiro acesso.",
                 "operationId": "592819a0265360b2014512d6dbfaf0e7",
                 "requestBody": {
                     "required": true,
@@ -3369,7 +3437,6 @@
                                 "required": [
                                     "name",
                                     "email",
-                                    "password",
                                     "role"
                                 ],
                                 "properties": {
@@ -3381,11 +3448,6 @@
                                         "type": "string",
                                         "format": "email",
                                         "example": "joao.silva@mosap3.ao"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "secret123"
                                     },
                                     "role": {
                                         "type": "string",
@@ -3407,7 +3469,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Usuário criado. É enviado um código de confirmação de 6 dígitos para o endereço indicado.",
+                        "description": "Usuário criado sem senha. É enviado um link de activação para o endereço indicado.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3682,8 +3744,8 @@
             "description": "Visualização de Documentos de Fornecedores e Propostas"
         },
         {
-            "name": "Confirmação de Email",
-            "description": "Confirmação do endereço de email por código de 6 dígitos"
+            "name": "Activação de Conta",
+            "description": "Activação da conta e definição da senha pelo próprio utilizador, a partir do link enviado por email"
         },
         {
             "name": "Avaliações de Fornecedores",

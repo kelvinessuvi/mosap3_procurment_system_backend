@@ -1,10 +1,10 @@
 -- =============================================================================
--- MOSAP3 Procurement - Reversão da confirmação de email / recuperação por código
+-- MOSAP3 Procurement - Reversão da activação de conta / recuperação de senha
 -- =============================================================================
 -- Uso: mysql -u UTILIZADOR -p NOME_DA_BD < 2026_09_23_000001_email_verification_codes_down.sql
 --
--- ATENÇÃO: apaga a tabela `verification_codes` e todos os códigos pendentes.
--- Os pedidos de confirmação e de recuperação em curso passam a ser inválidos.
+-- ATENÇÃO: apaga a tabela `verification_codes`, com todos os links de activação
+-- e códigos de recuperação pendentes. Os pedidos em curso passam a ser inválidos.
 --
 -- O preenchimento de `users.email_verified_at` NÃO é revertido: depois de
 -- aplicado, não há como distinguir as contas que já estavam confirmadas das que

@@ -43,6 +43,52 @@ class VerificationCodeService
     }
 
     /**
+     * Gera um token de link (activação de conta), invalidando os anteriores do mesmo tipo.
+     *
+     * Ao contrário de issue(), não há código de 6 dígitos: o link é a credencial.
+     */
+    public function issueLinkToken(string $email, string $type, int $expiresInHours): string
+    {
+        VerificationCode::where('email', $email)
+            ->where('type', $type)
+            ->active()
+            ->update(['consumed_at' => now()]);
+
+        $token = Str::random(64);
+        $expiresAt = now()->addHours($expiresInHours);
+
+        VerificationCode::create([
+            'email' => $email,
+            'type' => $type,
+            'code_hash' => null,
+            'expires_at' => $expiresAt,
+            'token' => $token,
+            'token_expires_at' => $expiresAt,
+        ]);
+
+        return $token;
+    }
+
+    /**
+     * Localiza um registo apenas pelo token do link (o email não vem no URL).
+     *
+     * Devolve null se o token não existir, já tiver sido usado ou estiver expirado.
+     */
+    public function findByLinkToken(string $token, string $type): ?VerificationCode
+    {
+        $record = VerificationCode::where('type', $type)
+            ->where('token', $token)
+            ->active()
+            ->first();
+
+        if (! $record || ! $record->token_expires_at || $record->token_expires_at->isPast()) {
+            return null;
+        }
+
+        return $record;
+    }
+
+    /**
      * Momento em que o último código deste tipo foi emitido (para limitar reenvios).
      */
     public function lastIssuedAt(string $email, string $type): ?Carbon

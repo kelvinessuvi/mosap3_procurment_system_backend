@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\EmailVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
@@ -44,20 +45,20 @@ class UserController extends Controller
      *     summary="Criar novo usuário (Admin/Técnico)",
      *     tags={"Usuários"},
      *     security={{"bearerAuth":{}}},
+     *     description="O administrador não define a senha. É enviado um link de activação ao utilizador, que define a sua própria senha no primeiro acesso.",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "email", "password", "role"},
+     *             required={"name", "email", "role"},
      *             @OA\Property(property="name", type="string", example="João Silva"),
      *             @OA\Property(property="email", type="string", format="email", example="joao.silva@mosap3.ao"),
-     *             @OA\Property(property="password", type="string", format="password", example="secret123"),
      *             @OA\Property(property="role", type="string", enum={"admin", "procurement_technician"}, example="procurement_technician"),
      *             @OA\Property(property="is_active", type="boolean", example=true)
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Usuário criado. É enviado um código de confirmação de 6 dígitos para o endereço indicado.",
+     *         description="Usuário criado sem senha. É enviado um link de activação para o endereço indicado.",
      *         @OA\JsonContent(
      *             @OA\Property(property="user", type="object"),
      *             @OA\Property(property="verification_email_sent", type="boolean"),
@@ -72,25 +73,27 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
             'role' => 'required|in:admin,procurement_technician',
             'is_active' => 'boolean'
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        // O administrador não define a senha: o utilizador define a sua no primeiro
+        // acesso, pelo link de activação. Até lá fica um hash aleatório que ninguém
+        // conhece — a coluna é NOT NULL e nenhuma senha real serve para entrar.
+        $validated['password'] = Hash::make(Str::random(64));
         $validated['email_verified_at'] = null;
 
         $user = User::create($validated);
 
-        // A conta só fica utilizável depois de o utilizador confirmar o código enviado por email.
+        // A conta só fica utilizável depois de o utilizador abrir o link de activação e definir a senha.
         $sent = $verification->send($user);
 
         return response()->json([
             'user' => $user->fresh(),
             'verification_email_sent' => $sent,
             'message' => $sent
-                ? 'Utilizador criado. Foi enviado um código de confirmação para ' . $user->email . '.'
-                : 'Utilizador criado, mas não foi possível enviar o código de confirmação. Use a opção de reenvio.',
+                ? 'Utilizador criado. Foi enviado um link para ' . $user->email . ' para o utilizador definir a sua senha.'
+                : 'Utilizador criado, mas não foi possível enviar o link de activação. Use a opção de reenvio.',
         ], 201);
     }
 

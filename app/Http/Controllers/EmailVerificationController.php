@@ -8,11 +8,13 @@ use App\Models\VerificationCode;
 use App\Services\EmailVerificationService;
 use App\Services\VerificationCodeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * @OA\Tag(
- *     name="Confirmação de Email",
- *     description="Confirmação do endereço de email por código de 6 dígitos"
+ *     name="Activação de Conta",
+ *     description="Activação da conta e definição da senha pelo próprio utilizador, a partir do link enviado por email"
  * )
  */
 class EmailVerificationController extends Controller
@@ -24,80 +26,204 @@ class EmailVerificationController extends Controller
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/email/verify",
-     *     summary="Confirmar email com o código de 6 dígitos",
-     *     tags={"Confirmação de Email"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email","code"},
-     *             @OA\Property(property="email", type="string", format="email", example="joao.silva@mosap3.ao"),
-     *             @OA\Property(property="code", type="string", example="482915")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Email confirmado",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="email_verified", type="boolean", example=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=422, description="Código inválido, expirado ou tentativas esgotadas")
-     * )
+     * Mostra o formulário de definição de senha (Rota Web, destino do link do email).
+     *
+     * O token NÃO é consumido aqui: só quando a senha for efectivamente definida.
      */
-    public function verify(Request $request)
+    public function showActivationForm(string $token)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'code' => 'required|digits:6',
-        ]);
-
-        $user = User::where('email', $request->email)->first();
+        $user = $this->userForToken($token);
 
         if (! $user) {
-            return $this->codeError('O código é inválido ou já expirou.');
+            return $this->invalidLinkPage();
         }
 
-        if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'Este email já foi confirmado. Pode iniciar sessão.',
-                'email_verified' => true,
-            ]);
+        return view('auth.set_password', [
+            'token' => $token,
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Define a senha e activa a conta (submissão do formulário web).
+     */
+    public function activateFromForm(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $this->activate($request->token, $request->password);
+
+        if (! $user) {
+            return $this->invalidLinkPage();
         }
 
-        $result = $this->codes->verify(
-            $user->email,
-            VerificationCode::TYPE_EMAIL_VERIFICATION,
-            $request->code
-        );
-
-        if ($result['status'] !== VerificationCodeService::OK) {
-            return $this->codeError($this->messageFor($result['status']), $result['remaining_attempts'] ?? 0);
-        }
-
-        $this->codes->consume($result['record']);
-        $user->markEmailAsVerified();
-
-        AuditLog::log(
-            'Confirmação de Email',
-            "Utilizador '{$user->name}' confirmou o email '{$user->email}'",
-            ['user_id' => $user->id, 'email' => $user->email],
-            $user
-        );
-
-        return response()->json([
-            'message' => 'Email confirmado com sucesso. Já pode iniciar sessão.',
-            'email_verified' => true,
+        return view('auth.verification_result', [
+            'status' => 'success',
+            'title' => 'Conta activada!',
+            'message' => 'A sua senha foi definida e a conta está activa. Já pode iniciar sessão na plataforma MOSAP3 Procurement.',
         ]);
     }
 
     /**
      * @OA\Post(
+     *     path="/api/email/check-token",
+     *     summary="Validar o token do link de activação",
+     *     description="Permite ao frontend alojar a sua própria página de definição de senha: devolve a quem pertence o link antes de mostrar o formulário. Não consome o token.",
+     *     tags={"Activação de Conta"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"token"},
+     *             @OA\Property(property="token", type="string", description="Token presente no link do email")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Token válido",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="valid", type="boolean", example=true),
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string", format="email")
+     *         )
+     *     ),
+     *     @OA\Response(response=410, description="Link inválido, já usado ou expirado")
+     * )
+     */
+    public function checkToken(Request $request)
+    {
+        $request->validate(['token' => 'required|string']);
+
+        $user = $this->userForToken($request->token);
+
+        if (! $user) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Este link de activação já foi utilizado ou expirou. Peça um novo link.',
+            ], 410);
+        }
+
+        return response()->json([
+            'valid' => true,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/email/verify",
+     *     summary="Definir a senha e activar a conta",
+     *     description="Alternativa à rota web /email/verify/{token}, para o caso de ser o frontend a alojar a página de definição de senha.",
+     *     tags={"Activação de Conta"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"token","password","password_confirmation"},
+     *             @OA\Property(property="token", type="string", description="Token presente no link do email"),
+     *             @OA\Property(property="password", type="string", format="password", example="aMinhaSenha123"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="aMinhaSenha123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Conta activada e senha definida",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="email_verified", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=410, description="Link inválido, já usado ou expirado"),
+     *     @OA\Response(response=422, description="Senha inválida")
+     * )
+     */
+    public function verifyApi(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $this->activate($request->token, $request->password);
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Este link de activação já foi utilizado ou expirou. Peça um novo link.',
+                'email_verified' => false,
+            ], 410);
+        }
+
+        return response()->json([
+            'message' => 'Conta activada e senha definida. Já pode iniciar sessão.',
+            'email_verified' => true,
+        ]);
+    }
+
+    /**
+     * Utilizador a quem pertence um token de activação ainda válido, ou null.
+     */
+    private function userForToken(string $token): ?User
+    {
+        $record = $this->codes->findByLinkToken($token, VerificationCode::TYPE_EMAIL_VERIFICATION);
+
+        if (! $record) {
+            return null;
+        }
+
+        return User::where('email', $record->email)->where('is_active', true)->first();
+    }
+
+    /**
+     * Define a senha, marca o email como confirmado e consome o token.
+     */
+    private function activate(string $token, string $password): ?User
+    {
+        $record = $this->codes->findByLinkToken($token, VerificationCode::TYPE_EMAIL_VERIFICATION);
+
+        if (! $record) {
+            return null;
+        }
+
+        $user = User::where('email', $record->email)->where('is_active', true)->first();
+
+        if (! $user) {
+            return null;
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($password),
+            'email_verified_at' => now(),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        $this->codes->consume($record);
+
+        AuditLog::log(
+            'Activação de Conta',
+            "Utilizador '{$user->name}' activou a conta e definiu a senha",
+            ['user_id' => $user->id, 'email' => $user->email],
+            $user
+        );
+
+        return $user;
+    }
+
+    private function invalidLinkPage()
+    {
+        return response()->view('auth.verification_result', [
+            'status' => 'invalid',
+            'title' => 'Link inválido ou expirado',
+            'message' => 'Este link de activação já foi utilizado ou expirou. Contacte o administrador para receber um novo link.',
+        ], 410);
+    }
+
+    /**
+     * @OA\Post(
      *     path="/api/email/resend-verification",
-     *     summary="Reenviar o código de confirmação (pelo próprio utilizador)",
-     *     tags={"Confirmação de Email"},
+     *     summary="Reenviar o link de activação (pelo próprio utilizador)",
+     *     tags={"Activação de Conta"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -105,8 +231,8 @@ class EmailVerificationController extends Controller
      *             @OA\Property(property="email", type="string", format="email")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Se a conta existir e estiver por confirmar, foi enviado um novo código"),
-     *     @OA\Response(response=429, description="Código pedido há menos de 60 segundos")
+     *     @OA\Response(response=200, description="Se a conta existir e estiver por activar, foi enviado um novo link"),
+     *     @OA\Response(response=429, description="Link pedido há menos de 60 segundos")
      * )
      */
     public function resendPublic(Request $request)
@@ -117,7 +243,7 @@ class EmailVerificationController extends Controller
 
         // Resposta genérica: não revela se o email existe na plataforma.
         $generic = response()->json([
-            'message' => 'Se existir uma conta por confirmar com este email, foi enviado um novo código.',
+            'message' => 'Se existir uma conta por activar com este email, foi enviado um novo link de activação.',
         ]);
 
         if (! $user || $user->hasVerifiedEmail() || ! $user->is_active) {
@@ -126,7 +252,7 @@ class EmailVerificationController extends Controller
 
         if ($this->verification->recentlySent($user->email)) {
             return response()->json([
-                'message' => 'Já foi enviado um código há pouco tempo. Aguarde um minuto antes de pedir outro.',
+                'message' => 'Já foi enviado um link há pouco tempo. Aguarde um minuto antes de pedir outro.',
             ], 429);
         }
 
@@ -138,12 +264,12 @@ class EmailVerificationController extends Controller
     /**
      * @OA\Post(
      *     path="/api/users/{user}/resend-verification",
-     *     summary="Reenviar o código de confirmação (Admin)",
-     *     tags={"Confirmação de Email"},
+     *     summary="Reenviar o link de activação (Admin)",
+     *     tags={"Activação de Conta"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="user", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Código reenviado"),
-     *     @OA\Response(response=422, description="Email já confirmado"),
+     *     @OA\Response(response=200, description="Link reenviado"),
+     *     @OA\Response(response=422, description="Conta já activada"),
      *     @OA\Response(response=500, description="Falha no envio do email")
      * )
      */
@@ -151,36 +277,18 @@ class EmailVerificationController extends Controller
     {
         if ($user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'O email deste utilizador já foi confirmado.',
+                'message' => 'A conta deste utilizador já foi activada.',
             ], 422);
         }
 
         if (! $this->verification->send($user)) {
             return response()->json([
-                'message' => 'Não foi possível enviar o email de confirmação. Tente novamente mais tarde.',
+                'message' => 'Não foi possível enviar o email de activação. Tente novamente mais tarde.',
             ], 500);
         }
 
         return response()->json([
-            'message' => 'Código de confirmação reenviado para ' . $user->email . '.',
+            'message' => 'Link de activação reenviado para ' . $user->email . '.',
         ]);
-    }
-
-    private function messageFor(string $status): string
-    {
-        return match ($status) {
-            VerificationCodeService::EXPIRED => 'O código expirou. Peça um novo código.',
-            VerificationCodeService::TOO_MANY_ATTEMPTS => 'Excedeu o número de tentativas. Peça um novo código.',
-            default => 'O código introduzido é inválido.',
-        };
-    }
-
-    private function codeError(string $message, int $remaining = 0)
-    {
-        return response()->json([
-            'message' => $message,
-            'remaining_attempts' => $remaining,
-            'errors' => ['code' => [$message]],
-        ], 422);
     }
 }

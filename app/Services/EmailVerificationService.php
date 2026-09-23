@@ -16,19 +16,23 @@ class EmailVerificationService
     }
 
     /**
-     * Gera um código de 6 dígitos e envia-o por email ao utilizador.
+     * Gera um link de activação e envia-o por email ao utilizador.
      *
-     * Devolve false se o envio falhar (a conta continua criada, o código pode ser reenviado).
+     * Devolve false se o envio falhar (a conta continua criada, o link pode ser reenviado).
      */
     public function send(User $user): bool
     {
-        $minutes = (int) config('auth.verification.expire', 30);
-        $code = $this->codes->issue($user->email, VerificationCode::TYPE_EMAIL_VERIFICATION, $minutes);
+        $hours = (int) config('auth.verification.expire', 48);
+        $token = $this->codes->issueLinkToken(
+            $user->email,
+            VerificationCode::TYPE_EMAIL_VERIFICATION,
+            $hours
+        );
 
         try {
-            Mail::to($user->email)->send(new VerifyEmailMail($user, $code, $minutes));
+            Mail::to($user->email)->send(new VerifyEmailMail($user, $this->verificationUrl($token), $hours));
         } catch (\Throwable $e) {
-            Log::error('Falha ao enviar código de confirmação de conta', [
+            Log::error('Falha ao enviar link de activação de conta', [
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'error' => $e->getMessage(),
@@ -39,7 +43,7 @@ class EmailVerificationService
 
         AuditLog::log(
             'Confirmação de Email',
-            "Código de confirmação de email enviado para '{$user->email}'",
+            "Link de activação (definição de senha) enviado para '{$user->email}'",
             ['user_id' => $user->id, 'email' => $user->email],
             auth()->user()
         );
@@ -48,7 +52,15 @@ class EmailVerificationService
     }
 
     /**
-     * Foi enviado um código há menos de 60 segundos?
+     * URL de activação enviado no email.
+     */
+    public function verificationUrl(string $token): string
+    {
+        return url('/email/verify/' . $token);
+    }
+
+    /**
+     * Foi enviado um link há menos de 60 segundos?
      */
     public function recentlySent(string $email): bool
     {
