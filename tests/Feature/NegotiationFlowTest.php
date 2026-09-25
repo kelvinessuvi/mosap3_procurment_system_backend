@@ -163,4 +163,39 @@ class NegotiationFlowTest extends TestCase
         $this->assertSame(2, Notification::where('type', 'quotation_declined')->count());
         Mail::assertSent(StaffNotificationMail::class, 2);
     }
+
+    public function test_responses_list_includes_acquisition_and_delivery_can_be_confirmed(): void
+    {
+        [$request, $invites] = $this->sentRequest(1);
+        $responseId = $this->submit($invites[0])->json('id');
+
+        $acquisitionId = $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/quotation-responses/{$responseId}/approve", ['expected_delivery_date' => now()->addDays(10)->toDateString()])
+            ->assertStatus(200)
+            ->json('acquisition.id');
+
+        // A listagem indica que a proposta já tem aquisição (o frontend esconde "Gerar Aquisição")
+        $this->actingAs($this->admin, 'sanctum')
+            ->getJson("/api/quotation-responses?quotation_request_id={$request->id}")
+            ->assertJsonPath('data.0.acquisition.id', $acquisitionId);
+
+        // Data de entrega no futuro não é aceite
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/acquisitions/{$acquisitionId}/confirm-delivery", ['actual_delivery_date' => now()->addDay()->toDateString()])
+            ->assertStatus(422);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/acquisitions/{$acquisitionId}/confirm-delivery", ['actual_delivery_date' => now()->subDay()->toDateString()])
+            ->assertStatus(200);
+
+        $acquisition = Acquisition::find($acquisitionId);
+        $this->assertSame('completed', $acquisition->status);
+        $this->assertSame(now()->subDay()->toDateString(), $acquisition->actual_delivery_date->toDateString());
+        $this->assertDatabaseHas('notifications', ['user_id' => $this->technician->id, 'type' => 'acquisition_delivered']);
+
+        // Não pode ser confirmada duas vezes
+        $this->actingAs($this->admin, 'sanctum')
+            ->postJson("/api/acquisitions/{$acquisitionId}/confirm-delivery")
+            ->assertStatus(400);
+    }
 }

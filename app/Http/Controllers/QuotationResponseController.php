@@ -46,7 +46,7 @@ class QuotationResponseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = QuotationResponse::with(['quotationSupplier.supplier', 'quotationSupplier.quotationRequest'])
+        $query = QuotationResponse::with(['quotationSupplier.supplier', 'quotationSupplier.quotationRequest', 'acquisition'])
             ->orderByDesc('id');
 
         if ($request->filled('status')) {
@@ -76,7 +76,7 @@ class QuotationResponseController extends Controller
      */
     public function show(QuotationResponse $quotationResponse)
     {
-        return response()->json($quotationResponse->load(['items.quotationItem', 'history', 'quotationSupplier.supplier']));
+        return response()->json($quotationResponse->load(['items.quotationItem', 'history', 'quotationSupplier.supplier', 'acquisition']));
     }
 
     /**
