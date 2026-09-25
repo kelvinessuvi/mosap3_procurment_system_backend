@@ -21,7 +21,7 @@
 
     @if($isQuotation)
         <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 16px; margin: 24px 0;">
-            <p style="margin: 0 0 8px;"><strong>System ID:</strong> {{ $ref }}</p>
+            <!-- <p style="margin: 0 0 8px;"><strong>System ID:</strong> {{ $ref }}</p> -->
             <p style="margin: 0 0 8px;"><strong>Título da actividade:</strong> {{ $entity->title }}</p>
             <p style="margin: 0 0 8px;"><strong>Referência PP:</strong> {{ $entity->activity_description }}</p>
             <p style="margin: 0;"><strong>Prazo Limite:</strong> {{ \Carbon\Carbon::parse($deadline)->format('d/m/Y H:i') }}</p>

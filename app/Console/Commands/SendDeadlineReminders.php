@@ -78,10 +78,10 @@ class SendDeadlineReminders extends Command
         };
 
         $message = match ($trigger) {
-            't_minus_2' => "Faltam 2 dias para o prazo da cotação #{$ref}. O prazo termina em {$deadline->format('d/m/Y H:i')}.",
-            't_minus_1' => "Amanhã termina o prazo da cotação #{$ref}. O prazo limite é {$deadline->format('d/m/Y H:i')}.",
-            'due_date' => "O prazo da cotação #{$ref} termina HOJE às {$deadline->format('H:i')}.",
-            'overdue' => "O prazo da cotação #{$ref} foi EXCEDIDO há {$daysOverdue} dia(s). Prazo limite era {$deadline->format('d/m/Y H:i')}.",
+            't_minus_2' => "Faltam 2 dias para o prazo da cotação #{$qr->activity_description}. O prazo termina em {$deadline->format('d/m/Y H:i')}.",
+            't_minus_1' => "Amanhã termina o prazo da cotação #{$qr->activity_description}. O prazo limite é {$deadline->format('d/m/Y H:i')}.",
+            'due_date' => "O prazo da cotação #{$qr->activity_description} termina HOJE às {$deadline->format('H:i')}.",
+            'overdue' => "O prazo da cotação #{$qr->activity_description} foi EXCEDIDO há {$daysOverdue} dia(s). Prazo limite era {$deadline->format('d/m/Y H:i')}.",
         };
 
         $data = [
@@ -155,10 +155,10 @@ class SendDeadlineReminders extends Command
         };
 
         $message = match ($trigger) {
-            't_minus_2' => "Faltam 2 dias para a entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . ". Data prevista: {$delivery->format('d/m/Y')}.",
-            't_minus_1' => "A entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . " está prevista para AMANHÃ ({$delivery->format('d/m/Y')}).",
-            'due_date' => "A entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . " está prevista para HOJE.",
-            'overdue' => "A entrega do pedido #{$ref}" . ($activityTitle ? " ({$activityTitle})" : '') . " está ATRASADA há {$daysOverdue} dia(s). Data prevista era {$delivery->format('d/m/Y')}.",
+            't_minus_2' => "Faltam 2 dias para a entrega do pedido #{$acq->activity_description}" . ($activityTitle ? " ({$activityTitle})" : '') . ". Data prevista: {$delivery->format('d/m/Y')}.",
+            't_minus_1' => "A entrega do pedido #{$acq->activity_description}" . ($activityTitle ? " ({$activityTitle})" : '') . " está prevista para AMANHÃ ({$delivery->format('d/m/Y')}).",
+            'due_date' => "A entrega do pedido #{$acq->activity_description}" . ($activityTitle ? " ({$activityTitle})" : '') . " está prevista para HOJE.",
+            'overdue' => "A entrega do pedido #{$acq->activity_description}" . ($activityTitle ? " ({$activityTitle})" : '') . " está ATRASADA há {$daysOverdue} dia(s). Data prevista era {$delivery->format('d/m/Y')}.",
         };
 
         $data = [

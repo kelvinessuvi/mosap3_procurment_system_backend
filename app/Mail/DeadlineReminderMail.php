@@ -67,17 +67,17 @@ class DeadlineReminderMail extends Mailable
             );
 
             return $isQuotation
-                ? "ALERTA: Prazo da Cotação {$ref} EXCEDIDO há {$daysOverdue} dia(s)"
-                : "ALERTA: Entrega do Pedido {$ref} ATRASADA há {$daysOverdue} dia(s)";
+                ? "ALERTA: Prazo da Cotação {$this->entity->activity_description} EXCEDIDO há {$daysOverdue} dia(s)"
+                : "ALERTA: Entrega do Pedido {$this->entity->activity_description} ATRASADA há {$daysOverdue} dia(s)";
         }
 
         $prefix = $isQuotation ? 'Prazo da Cotação' : 'Entrega do Pedido';
 
         return match ($this->trigger) {
-            't_minus_2' => "Lembrete: {$prefix} {$ref} termina em 2 dias",
-            't_minus_1' => "Lembrete: {$prefix} {$ref} termina amanhã",
-            'due_date' => "Lembrete: {$prefix} {$ref} termina HOJE",
-            default => "Lembrete: {$prefix} {$ref}",
+            't_minus_2' => "Lembrete: {$prefix} {$this->entity->activity_description} termina em 2 dias",
+            't_minus_1' => "Lembrete: {$prefix} {$this->entity->activity_description} termina amanhã",
+            'due_date' => "Lembrete: {$prefix} {$this->entity->activity_description} termina HOJE",
+            default => "Lembrete: {$prefix} {$this->entity->activity_description}",
         };
     }
 }

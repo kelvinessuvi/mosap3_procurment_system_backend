@@ -20,7 +20,7 @@
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Referência PP: {{ $quotation->activity_description }}</h1>
                         <h2 class="text-2xl font-bold text-gray-900">Título da Actividade: {{ $quotation->title }}</h2>
-                        <p class="text-sm text-gray-500 mt-1">System ID: {{ $quotation->reference_number }}</p>
+                        <!--<p class="text-sm text-gray-500 mt-1">System ID: {{ $quotation->reference_number }}</p>-->
                     </div>
                     <div class="text-right">
                         <p class="text-sm text-gray-500">Prazo de Entrega</p>

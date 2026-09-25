@@ -8,7 +8,7 @@
     <p>Sua empresa foi selecionada para participar de um processo de aquisição. Abaixo estão os detalhes da solicitação:</p>
 -->
     <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 16px; margin: 24px 0;">
-        <p style="margin: 0 0 8px;"><strong>System ID:</strong> {{ $quotation->reference_number }}</p>
+        <!--<p style="margin: 0 0 8px;"><strong>System ID:</strong> {{ $quotation->reference_number }}</p>-->
         <p style="margin: 0 0 8px;"><strong>Título da actividade:</strong> {{ $quotation->title }}</p>
         <p style="margin: 0 0 8px;"><strong>Referência PP:</strong> {{ $quotation->activity_description }}</p>
         <p style="margin: 0;"><strong>Prazo Limite:</strong> {{ $quotation->deadline->format('d/m/Y H:i') }}</p>
