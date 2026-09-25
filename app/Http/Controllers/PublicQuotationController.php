@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Notification;
 use App\Models\AuditLog;
 use App\Models\QuotationResponse;
 use App\Models\QuotationSupplier;
+use App\Services\ProcurementNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -50,7 +50,7 @@ class PublicQuotationController extends Controller
 
         $response = QuotationResponse::where('quotation_supplier_id', $qs->id)
             ->with('items')
-            ->latest()
+            ->latest('id')
             ->first();
 
         return response()->json([
@@ -112,19 +112,23 @@ class PublicQuotationController extends Controller
      *     @OA\Response(response=201, description="Proposta enviada com sucesso")
      * )
      */
-    public function submit(Request $request, $token)
+    public function submit(Request $request, $token, ProcurementNotifier $notifier)
     {
         $qs = QuotationSupplier::where('token', $token)->firstOrFail();
 
-        if (in_array($qs->status, ['submitted', 'declined']) && $qs->quotationRequest->status !== 'in_progress') {
-             // Allow resobmission only if requested revision? 
-             // Logic: If status is 'submitted', maybe block. If 'needs_revision' (on response), allow.
-             // But qs status is 'submitted' usually. 
-             // Let's check the Response status.
-             $lastResponse = QuotationResponse::where('quotation_supplier_id', $qs->id)->latest()->first();
-             if ($lastResponse && !in_array($lastResponse->status, ['needs_revision', 'negotiating'])) {
-                 return response()->json(['message' => 'Proposta já submetida.'], 403);
-             }
+        // Pedido encerrado: não aceita mais propostas
+        if (in_array($qs->quotationRequest->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Este pedido de cotação já foi encerrado.'], 403);
+        }
+
+        if ($qs->status === 'declined') {
+            return response()->json(['message' => 'A participação neste pedido foi declinada.'], 403);
+        }
+
+        // Só é possível reenviar quando a equipa pediu uma revisão da última proposta
+        $lastResponse = QuotationResponse::where('quotation_supplier_id', $qs->id)->latest('id')->first();
+        if ($lastResponse && !in_array($lastResponse->status, ['needs_revision', 'negotiating'])) {
+            return response()->json(['message' => 'Proposta já submetida.'], 403);
         }
 
         Log::info('Quotation Submit Input (Raw):', $request->all());
@@ -145,10 +149,10 @@ class PublicQuotationController extends Controller
             'proposal_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 
-        return DB::transaction(function () use ($validated, $qs, $request) {
+        $response = DB::transaction(function () use ($validated, $qs, $request) {
             
             // Determine revision number
-            $lastResponse = QuotationResponse::where('quotation_supplier_id', $qs->id)->latest()->first();
+            $lastResponse = QuotationResponse::where('quotation_supplier_id', $qs->id)->latest('id')->first();
             $revisionNumber = $lastResponse ? $lastResponse->revision_number + 1 : 1;
 
             // If we want to keep history, maybe we snapshot the OLD one before creating new?
@@ -207,20 +211,6 @@ class PublicQuotationController extends Controller
                 'action_notes' => 'Proposta submetida pelo fornecedor',
             ]);
 
-            // Create notification for quotation request creator
-            Notification::create([
-                'user_id' => $qs->quotationRequest->user_id,
-                'type' => 'quotation_response_submitted',
-                'title' => 'Nova Proposta Recebida',
-                'message' => "O fornecedor {$qs->supplier->company_name} submeteu uma proposta para a cotação #{$qs->quotationRequest->id}",
-                'data' => [
-                    'quotation_request_id' => $qs->quotationRequest->id,
-                    'quotation_response_id' => $response->id,
-                    'supplier_id' => $qs->supplier_id,
-                    'supplier_name' => $qs->supplier->company_name
-                ]
-            ]);
-
             // Update supplier evaluation metrics
             $this->updateSupplierEvaluation($qs->supplier_id);
 
@@ -232,8 +222,38 @@ class PublicQuotationController extends Controller
                 'revision_number' => $revisionNumber,
             ]);
 
-            return response()->json($response->load([]), 201);
+            return $response;
         });
+
+        // Notificar a equipa (in-app + email) depois de a proposta estar gravada
+        $qs->load('supplier', 'quotationRequest');
+        $isRevision = $response->revision_number > 1;
+        $supplierName = $qs->supplier->company_name;
+        $quotationRequest = $qs->quotationRequest;
+        $notifier->notifyStaff(
+            $quotationRequest,
+            $isRevision ? 'quotation_response_revised' : 'quotation_response_submitted',
+            $isRevision ? 'Proposta Revista Recebida' : 'Nova Proposta Recebida',
+            $isRevision
+                ? "O fornecedor {$supplierName} submeteu a revisão n.º {$response->revision_number} da proposta para \"{$quotationRequest->title}\"."
+                : "O fornecedor {$supplierName} submeteu uma proposta para \"{$quotationRequest->title}\".",
+            [
+                'quotation_response_id' => $response->id,
+                'supplier_id' => $qs->supplier_id,
+                'supplier_name' => $supplierName,
+                'revision_number' => $response->revision_number,
+            ],
+            [
+                'Pedido' => $quotationRequest->reference_number,
+                'Actividade' => $quotationRequest->title,
+                'Fornecedor' => $supplierName,
+                'Revisão' => $isRevision ? "n.º {$response->revision_number}" : null,
+                'Data de entrega proposta' => optional($response->delivery_date)->format('d/m/Y'),
+                'Condições de pagamento' => $response->payment_terms,
+            ]
+        );
+
+        return response()->json($response, 201);
     }
 
     /**
@@ -245,24 +265,27 @@ class PublicQuotationController extends Controller
      *     @OA\Response(response=200, description="Participação apenas declinada")
      * )
      */
-    public function decline(Request $request, $token)
+    public function decline(Request $request, $token, ProcurementNotifier $notifier)
     {
         $qs = QuotationSupplier::where('token', $token)->firstOrFail();
         $qs->load('supplier', 'quotationRequest');
         $qs->update(['status' => 'declined']);
 
-        // Create notification for quotation request creator
-        Notification::create([
-            'user_id' => $qs->quotationRequest->user_id,
-            'type' => 'quotation_declined',
-            'title' => 'Fornecedor Declinou Convite',
-            'message' => "O fornecedor {$qs->supplier->company_name} declinou a participação na cotação #{$qs->quotationRequest->id}",
-            'data' => [
-                'quotation_request_id' => $qs->quotationRequest->id,
+        $notifier->notifyStaff(
+            $qs->quotationRequest,
+            'quotation_declined',
+            'Fornecedor Declinou Convite',
+            "O fornecedor {$qs->supplier->company_name} declinou a participação em \"{$qs->quotationRequest->title}\".",
+            [
                 'supplier_id' => $qs->supplier_id,
-                'supplier_name' => $qs->supplier->company_name
+                'supplier_name' => $qs->supplier->company_name,
+            ],
+            [
+                'Pedido' => $qs->quotationRequest->reference_number,
+                'Actividade' => $qs->quotationRequest->title,
+                'Fornecedor' => $qs->supplier->company_name,
             ]
-        ]);
+        );
 
         AuditLog::log('Declínio de cotação', "Fornecedor '{$qs->supplier->company_name}' declinou cotação #{$qs->quotationRequest->id}", [
             'quotation_request_id' => $qs->quotationRequest->id,
