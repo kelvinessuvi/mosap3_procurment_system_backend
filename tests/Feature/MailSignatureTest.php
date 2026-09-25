@@ -104,7 +104,10 @@ class MailSignatureTest extends TestCase
         [$supplier, $qr, $response] = $this->createResponse();
 
         $this->actingAs($admin, 'sanctum')
-            ->postJson("/api/quotation-responses/{$response->id}/approve", ['notes' => 'Ótima proposta'])
+            ->postJson("/api/quotation-responses/{$response->id}/approve", [
+                'notes' => 'Ótima proposta',
+                'expected_delivery_date' => now()->addDays(10)->toDateString(),
+            ])
             ->assertStatus(200);
 
         Mail::assertSent(ProposalApprovedMail::class, function ($mail) use ($admin) {

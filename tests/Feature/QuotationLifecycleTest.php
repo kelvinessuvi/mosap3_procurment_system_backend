@@ -71,19 +71,10 @@ class QuotationLifecycleTest extends TestCase
         $this->assertEquals('opened', $pivot->status);
 
         // 4. Supplier 1 Submits a Proposal
-        $quotationItem = $quotation->items->first();
-        
         $proposalData = [
             'deliveryDate' => now()->addDays(5)->toIso8601String(),
             'deliveryDays' => 5,
             'paymentTerms' => '50% upfront',
-            'items' => [
-                [
-                    'quotation_item_id' => $quotationItem->id,
-                    'unit_price' => 50000,
-                    'notes' => 'Best wood',
-                ]
-            ]
         ];
 
         $submitResponse = $this->postJson("/api/quotation/{$token}/submit", $proposalData);
@@ -114,20 +105,16 @@ class QuotationLifecycleTest extends TestCase
         
         $submittedResponseId = $submitResponse->json('id');
         
-        // 7. Admin Approves Proposal from Supplier 1
+        // 7. Admin Approves Proposal from Supplier 1 (aprovar = gerar aquisição)
         $approveResponse = $this->actingAs($admin, 'sanctum')->postJson("/api/quotation-responses/{$submittedResponseId}/approve", [
+            'expected_delivery_date' => now()->addDays(10)->toDateString(),
+            'justification' => 'Urgent need',
             'notes' => 'Best price and quality',
         ]);
         $approveResponse->assertStatus(200)
-                        ->assertJson(['status' => 'approved']);
+                        ->assertJson(['status' => 'approved'])
+                        ->assertJsonStructure(['acquisition' => ['id', 'reference_number']]);
 
-        // 8. Admin Creates Acquisition
-        $acquisitionResponse = $this->actingAs($admin, 'sanctum')->postJson("/api/quotation-responses/{$submittedResponseId}/create-acquisition", [
-            'expected_delivery_date' => now()->addDays(10)->toIso8601String(),
-            'justification' => 'Urgent need',
-        ]);
-        $acquisitionResponse->assertStatus(201);
-        
         // Verify Request is Completed
         $quotation->refresh();
         $this->assertEquals('completed', $quotation->status);

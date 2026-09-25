@@ -60,6 +60,12 @@ return [
     'asset_url' => env('ASSET_URL'),
 
     /*
+    | URL do frontend (painel). Usado nos emails para ligar directamente
+    | ao pedido de cotação, ex.: {FRONTEND_URL}/aquisicoes?pedido=123
+    */
+    'frontend_url' => env('FRONTEND_URL'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
