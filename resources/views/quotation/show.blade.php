@@ -123,12 +123,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Dias para Entrega</label>
-                            <input type="hidden" name="delivery_days" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
+                            <input type="text" id="delivery_days_display" value="—" readonly tabindex="-1" aria-readonly="true"
+                                   class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed shadow-sm sm:text-sm border p-2">
+                            <p class="mt-1 text-xs text-gray-500">Calculado automaticamente a partir da data de entrega.</p>
                         </div>
-                        <!--<div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700">Termos de Pagamento</label>
-                            <input type="text" name="payment_terms" required placeholder="Ex: 50% Adjudicação, 50% Entrega" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
-                        </div>-->
                     </div>
 
 
@@ -253,27 +251,26 @@
             }
         });
 
-        // Auto-fill delivery days
+        // Mostra os dias de entrega a partir da data escolhida.
+        // É só indicativo: quem calcula o valor gravado é o servidor.
         const deliveryDateInput = document.querySelector('input[name="delivery_date"]');
-        const deliveryDaysInput = document.querySelector('input[name="delivery_days"]');
+        const deliveryDaysDisplay = document.getElementById('delivery_days_display');
 
-        if (deliveryDateInput && deliveryDaysInput) {
+        if (deliveryDateInput && deliveryDaysDisplay) {
             deliveryDateInput.addEventListener('change', function() {
                 const selectedDate = new Date(this.value);
                 const today = new Date();
-                
+
                 // Reset hours to compare just dates
                 selectedDate.setHours(0,0,0,0);
                 today.setHours(0,0,0,0);
-                
+
                 if (selectedDate > today) {
                     const diffTime = Math.abs(selectedDate - today);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                    deliveryDaysInput.value = diffDays;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    deliveryDaysDisplay.value = diffDays + (diffDays === 1 ? ' dia' : ' dias');
                 } else {
-                    // If date is today or past, logic might vary, but usually implies 0 or error.
-                    // Validation usually prevents past dates ("after:now" in controller).
-                    deliveryDaysInput.value = '';
+                    deliveryDaysDisplay.value = '—';
                 }
             });
         }

@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\QuotationResponse;
 use App\Models\QuotationSupplier;
 use App\Services\ProcurementNotifier;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -60,6 +61,19 @@ class PublicQuotationController extends Controller
     }
 
     /**
+     * Dias entre hoje e a data de entrega escolhida.
+     *
+     * Espelha o cálculo mostrado no formulário, mas é este o valor que conta:
+     * o campo é apresentado como só-leitura e um cliente pode sempre forjá-lo.
+     */
+    private function deliveryDaysFrom(string $deliveryDate): int
+    {
+        return (int) Carbon::now()->startOfDay()->diffInDays(
+            Carbon::parse($deliveryDate)->startOfDay()
+        );
+    }
+
+    /**
      * Exibe a VIEW pública para o fornecedor (Rota Web).
      */
     public function viewRequest($token)
@@ -95,10 +109,10 @@ class PublicQuotationController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"delivery_date", "delivery_days", "payment_terms"},
+     *                 required={"delivery_date"},
      *                 @OA\Property(property="delivery_date", type="string", format="date", example="2026-02-15"),
-     *                 @OA\Property(property="delivery_days", type="integer", example=15),
-     *                 @OA\Property(property="payment_terms", type="string", example="50% na encomenda, 50% na entrega"),
+     *                 @OA\Property(property="delivery_days", type="integer", example=15, readOnly=true, description="Calculado pelo servidor a partir de delivery_date. Qualquer valor enviado é ignorado."),
+     *                 @OA\Property(property="payment_terms", type="string", nullable=true, deprecated=true, description="Deixou de ser pedido ao fornecedor. Mantido apenas por compatibilidade: se for enviado é gravado, caso contrário fica a null."),
      *                 @OA\Property(property="observations", type="string", example="Frete incluso"),
      *                 @OA\Property(
      *                     property="proposal_file",
@@ -136,18 +150,23 @@ class PublicQuotationController extends Controller
         // Normalize inputs (Support camelCase from JS frontends)
         $input = $request->all();
         if (isset($input['deliveryDate'])) $input['delivery_date'] = $input['deliveryDate'];
-        if (isset($input['deliveryDays'])) $input['delivery_days'] = $input['deliveryDays'];
         if (isset($input['paymentTerms'])) $input['payment_terms'] = $input['paymentTerms'];
+
+        // Os dias de entrega não são editáveis: são derivados da data de entrega.
+        // Qualquer valor vindo do cliente é descartado antes da validação.
+        unset($input['delivery_days'], $input['deliveryDays']);
 
         $request->merge($input);
 
         $validated = $request->validate([
             'observations' => 'nullable|string',
             'delivery_date' => 'required|date|after:now',
-            'delivery_days' => 'required|integer|min:0',
-            'payment_terms' => 'required|string',
+            'payment_terms' => 'nullable|string',
             'proposal_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
+
+        // Dias de entrega: sempre calculados a partir da data escolhida.
+        $validated['delivery_days'] = $this->deliveryDaysFrom($validated['delivery_date']);
 
         $response = DB::transaction(function () use ($validated, $qs, $request) {
             
@@ -176,7 +195,7 @@ class PublicQuotationController extends Controller
                 'observations' => $validated['observations'] ?? null,
                 'delivery_date' => $validated['delivery_date'],
                 'delivery_days' => $validated['delivery_days'],
-                'payment_terms' => $validated['payment_terms'],
+                'payment_terms' => $validated['payment_terms'] ?? null,
                 'submitted_at' => now(),
                 'status' => 'pending_review',
                 'revision_number' => $revisionNumber,
@@ -249,7 +268,8 @@ class PublicQuotationController extends Controller
                 'Fornecedor' => $supplierName,
                 'Revisão' => $isRevision ? "n.º {$response->revision_number}" : null,
                 'Data de entrega proposta' => optional($response->delivery_date)->format('d/m/Y'),
-                'Condições de pagamento' => $response->payment_terms,
+                'Prazo de entrega' => $response->delivery_days . ' dia(s)',
+                'Condições de pagamento' => $response->payment_terms ?: null,
             ]
         );
 
