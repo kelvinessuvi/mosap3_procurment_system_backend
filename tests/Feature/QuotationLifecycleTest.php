@@ -71,10 +71,10 @@ class QuotationLifecycleTest extends TestCase
         $this->assertEquals('opened', $pivot->status);
 
         // 4. Supplier 1 Submits a Proposal
+        // Espelha o que o formulário público envia hoje: só a data de entrega.
+        // Os dias são calculados no servidor e os termos de pagamento já não existem.
         $proposalData = [
             'deliveryDate' => now()->addDays(5)->toIso8601String(),
-            'deliveryDays' => 5,
-            'paymentTerms' => '50% upfront',
         ];
 
         $submitResponse = $this->postJson("/api/quotation/{$token}/submit", $proposalData);

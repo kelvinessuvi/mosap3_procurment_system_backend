@@ -151,6 +151,23 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "actual_delivery_date": {
+                                        "description": "Data real da entrega (por omissão, hoje)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-09-25"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Aquisição marcada como completa"
@@ -1883,9 +1900,7 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "delivery_date",
-                                    "delivery_days",
-                                    "payment_terms"
+                                    "delivery_date"
                                 ],
                                 "properties": {
                                     "delivery_date": {
@@ -1894,12 +1909,16 @@
                                         "example": "2026-02-15"
                                     },
                                     "delivery_days": {
+                                        "description": "Calculado pelo servidor a partir de delivery_date. Qualquer valor enviado é ignorado.",
                                         "type": "integer",
+                                        "readOnly": true,
                                         "example": 15
                                     },
                                     "payment_terms": {
+                                        "description": "Deixou de ser pedido ao fornecedor. Mantido apenas por compatibilidade: se for enviado é gravado, caso contrário fica a null.",
                                         "type": "string",
-                                        "example": "50% na encomenda, 50% na entrega"
+                                        "nullable": true,
+                                        "deprecated": true
                                     },
                                     "observations": {
                                         "type": "string",
@@ -2478,6 +2497,7 @@
                     "Negociação & Revisão"
                 ],
                 "summary": "Listar Respostas",
+                "description": "Lista paginada, da mais recente para a mais antiga. Cada revisão do fornecedor é uma resposta nova (revision_number).",
                 "operationId": "a83ffe4946cf337a0be3a594b5c04423",
                 "parameters": [
                     {
@@ -2492,6 +2512,14 @@
                         "in": "query",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100
                         }
                     }
                 ],
@@ -2541,7 +2569,8 @@
                 "tags": [
                     "Negociação & Revisão"
                 ],
-                "summary": "Aprovar Proposta",
+                "summary": "Aprovar Proposta e Gerar Aquisição",
+                "description": "Numa única operação: aprova a proposta, gera a aquisição, conclui o pedido de cotação e rejeita as restantes propostas em aberto (os fornecedores são avisados por email).",
                 "operationId": "86323686c1b5c849254eda155910ffc9",
                 "parameters": [
                     {
@@ -2554,10 +2583,23 @@
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "expected_delivery_date"
+                                ],
                                 "properties": {
+                                    "expected_delivery_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-01"
+                                    },
+                                    "justification": {
+                                        "type": "string",
+                                        "example": "Melhor relação preço/prazo"
+                                    },
                                     "notes": {
                                         "type": "string",
                                         "example": "Aprovado, excelente preço"
@@ -2570,7 +2612,10 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Aprovado com sucesso"
+                        "description": "Proposta aprovada e aquisição criada (campo acquisition)"
+                    },
+                    "422": {
+                        "description": "A proposta ou o pedido já não pode ser aprovado"
                     }
                 },
                 "security": [
@@ -2630,7 +2675,7 @@
                     "Negociação & Revisão"
                 ],
                 "summary": "Solicitar Revisão",
-                "description": "Solicita ao fornecedor uma revisão da proposta (Gera novo token).",
+                "description": "Solicita ao fornecedor uma revisão da proposta (gera novo token). A proposta revista chega como uma nova resposta com revision_number incrementado.",
                 "operationId": "a1627525d8f074534ba60b020c81b143",
                 "parameters": [
                     {
@@ -2683,8 +2728,8 @@
                 "tags": [
                     "Negociação & Revisão"
                 ],
-                "summary": "Gerar Aquisição",
-                "description": "Gera uma aquisição a partir de uma proposta aprovada.",
+                "summary": "Gerar Aquisição (propostas já aprovadas)",
+                "description": "Compatibilidade: gera a aquisição de uma proposta aprovada antes do fluxo unificado (aprovar = gerar aquisição).",
                 "operationId": "82423805408d6510cec79d20b328ad24",
                 "parameters": [
                     {
