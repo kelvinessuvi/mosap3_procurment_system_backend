@@ -47,4 +47,12 @@ class QuotationResponse extends Model
     {
         return $this->hasMany(QuotationResponseHistory::class);
     }
+
+    /**
+     * Aquisição gerada a partir desta proposta (se existir).
+     */
+    public function acquisition()
+    {
+        return $this->hasOne(Acquisition::class);
+    }
 }

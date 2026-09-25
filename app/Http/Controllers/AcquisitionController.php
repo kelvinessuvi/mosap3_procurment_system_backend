@@ -8,6 +8,7 @@ use App\Models\DeletionRequest;
 use App\Models\Notification;
 use App\Models\QuotationItem;
 use App\Models\User;
+use App\Services\ProcurementNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,7 @@ class AcquisitionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Acquisition::with(['supplier', 'user', 'quotationRequest']);
+        $query = Acquisition::with(['supplier', 'user', 'quotationRequest'])->orderByDesc('id');
 
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
@@ -48,7 +49,13 @@ class AcquisitionController extends Controller
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 
-        return response()->json($query->paginate(15));
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $perPage = min(max((int) $request->input('per_page', 15), 1), 100);
+
+        return response()->json($query->paginate($perPage));
     }
 
     /**
@@ -130,40 +137,61 @@ class AcquisitionController extends Controller
      *     tags={"Aquisições"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="acquisition", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="actual_delivery_date", type="string", format="date", example="2026-09-25", description="Data real da entrega (por omissão, hoje)")
+     *         )
+     *     ),
      *     @OA\Response(response=200, description="Aquisição marcada como completa")
      * )
      */
-    public function confirmDelivery(Request $request, Acquisition $acquisition)
+    public function confirmDelivery(Request $request, Acquisition $acquisition, ProcurementNotifier $notifier)
     {
         if ($acquisition->status !== 'pending' && $acquisition->status !== 'in_progress') {
-            return response()->json(['message' => 'Status inválido para confirmação.'], 400);
+            return response()->json(['message' => 'Esta aquisição já não aguarda entrega.'], 400);
         }
+
+        $validated = $request->validate([
+            // Data em que a entrega aconteceu (por omissão, hoje)
+            'actual_delivery_date' => 'nullable|date|before_or_equal:today',
+        ]);
 
         $acquisition->update([
             'status' => 'completed',
-            'actual_delivery_date' => now()
+            'actual_delivery_date' => $validated['actual_delivery_date'] ?? now(),
         ]);
+
+        $user = $request->user();
+        $acquisition->load('quotationRequest', 'supplier');
 
         AuditLog::log('Confirmação de entrega', "Aquisição #{$acquisition->reference_number} teve entrega confirmada", [
             'acquisition_id' => $acquisition->id,
             'reference_number' => $acquisition->reference_number,
             'supplier_id' => $acquisition->supplier_id,
-        ], $request->user());
+            'actual_delivery_date' => optional($acquisition->actual_delivery_date)->toDateString(),
+        ], $user);
 
-        // Notify the requester
-        $acquisition->load('quotationRequest');
-        if ($acquisition->quotationRequest && $acquisition->quotationRequest->user_id) {
-            \App\Models\Notification::create([
-                'user_id' => $acquisition->quotationRequest->user_id,
-                'type' => 'acquisition_delivered',
-                'title' => 'Entrega Confirmada',
-                'message' => "A entrega da aquisição #{$acquisition->reference_number} foi confirmada.",
-                'data' => [
+        if ($acquisition->quotationRequest) {
+            $supplierName = $acquisition->supplier->company_name ?? 'Fornecedor';
+            $notifier->notifyStaff(
+                $acquisition->quotationRequest,
+                'acquisition_delivered',
+                'Entrega Confirmada',
+                "{$user->name} confirmou a entrega da aquisição {$acquisition->reference_number} ({$supplierName}).",
+                [
                     'acquisition_id' => $acquisition->id,
                     'reference_number' => $acquisition->reference_number,
-                    'supplier_name' => $acquisition->supplier->company_name ?? 'Fornecedor'
-                ]
-            ]);
+                    'supplier_name' => $supplierName,
+                ],
+                [
+                    'Aquisição' => $acquisition->reference_number,
+                    'Actividade' => $acquisition->quotationRequest->title,
+                    'Fornecedor' => $supplierName,
+                    'Entrega prevista' => optional($acquisition->expected_delivery_date)->format('d/m/Y'),
+                    'Entrega real' => optional($acquisition->actual_delivery_date)->format('d/m/Y'),
+                ],
+                $user
+            );
         }
 
         return response()->json([

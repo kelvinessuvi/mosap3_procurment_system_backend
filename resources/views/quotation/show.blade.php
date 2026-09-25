@@ -118,12 +118,12 @@
                 <form id="proposal-form" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Data de Entrega</label>
+                            <label class="block text-sm font-medium text-gray-700">Data de Entrega dos Bens/Serviços</label>
                             <input type="date" name="delivery_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Dias para Entrega</label>
-                            <input type="number" name="delivery_days" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
+                            <input type="hidden" name="delivery_days" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
                         </div>
                         <!--<div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Termos de Pagamento</label>
