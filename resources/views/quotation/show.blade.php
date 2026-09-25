@@ -125,10 +125,10 @@
                             <label class="block text-sm font-medium text-gray-700">Dias para Entrega</label>
                             <input type="number" name="delivery_days" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
                         </div>
-                        <div class="md:col-span-2">
+                        <!--<div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Termos de Pagamento</label>
                             <input type="text" name="payment_terms" required placeholder="Ex: 50% Adjudicação, 50% Entrega" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#148742] focus:ring-[#148742] sm:text-sm border p-2">
-                        </div>
+                        </div>-->
                     </div>
 
 
