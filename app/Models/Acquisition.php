@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Contracts\VisibilityScoped;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Acquisition extends Model
+class Acquisition extends Model implements VisibilityScoped
 {
     use HasFactory, Auditable, SoftDeletes;
 
@@ -71,5 +73,44 @@ class Acquisition extends Model
     public function deletionRequests()
     {
         return $this->morphMany(DeletionRequest::class, 'requestable');
+    }
+
+    /**
+     * Visibilidade herdada do processo que deu origem à aquisição.
+     *
+     * ATENÇÃO: acquisitions.user_id é quem APROVOU (ver o comentário na migração),
+     * não quem iniciou o processo. Filtrar por essa coluna daria o resultado
+     * errado — o caminho certo é sempre via quotationRequest.
+     *
+     * withTrashed() é intencional: sem ele o whereHas herda o SoftDeletes de
+     * QuotationRequest e uma aquisição cujo processo foi eliminado desapareceria
+     * para o técnico mas não para o admin.
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if ($user && $user->role === 'admin') {
+            return $query;
+        }
+
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas('quotationRequest', function ($q) use ($user) {
+            $q->withTrashed()->visibleTo($user);
+        });
+    }
+
+    public function isVisibleTo(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        return (bool) $this->quotationRequest?->isVisibleTo($user);
     }
 }

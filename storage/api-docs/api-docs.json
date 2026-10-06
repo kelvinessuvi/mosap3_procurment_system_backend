@@ -232,6 +232,155 @@
                 ]
             }
         },
+        "/api/assignment-requests": {
+            "get": {
+                "tags": [
+                    "Pedidos de Atribuição"
+                ],
+                "summary": "Listar pedidos de atribuição",
+                "operationId": "b377f75cbdb891c51a0e1e76ecf5aa01",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "active",
+                                "rejected",
+                                "revoked"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista paginada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/assignment-requests/{assignment}": {
+            "get": {
+                "tags": [
+                    "Pedidos de Atribuição"
+                ],
+                "summary": "Detalhe de um pedido de atribuição",
+                "operationId": "3159c7bbd2c6c45a8144403a57a5f1ad",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalhe"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/assignment-requests/{assignment}/approve": {
+            "post": {
+                "tags": [
+                    "Pedidos de Atribuição"
+                ],
+                "summary": "Aprovar o pedido de atribuição",
+                "description": "A atribuição passa a estar em vigor e o técnico ganha acesso ao processo.",
+                "operationId": "99ee621a1ad32be650871e84879e49c3",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aprovado"
+                    },
+                    "400": {
+                        "description": "Pedido já processado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/assignment-requests/{assignment}/reject": {
+            "post": {
+                "tags": [
+                    "Pedidos de Atribuição"
+                ],
+                "summary": "Rejeitar o pedido de atribuição",
+                "operationId": "454ef2f41e0095c6b067cead50ff40b2",
+                "parameters": [
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rejection_reason"
+                                ],
+                                "properties": {
+                                    "rejection_reason": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rejeitado"
+                    },
+                    "400": {
+                        "description": "Pedido já processado"
+                    },
+                    "422": {
+                        "description": "Falta a justificação"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/audit-logs": {
             "get": {
                 "tags": [
@@ -2120,6 +2269,146 @@
                 }
             }
         },
+        "/api/quotation-requests/{quotationRequest}/assignments": {
+            "get": {
+                "tags": [
+                    "Atribuição de Processos"
+                ],
+                "summary": "Listar atribuições do processo",
+                "description": "Inclui as atribuições em vigor, os pedidos pendentes e o histórico.",
+                "operationId": "894415d737711dc3bc985c9b3127eca9",
+                "parameters": [
+                    {
+                        "name": "quotationRequest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de atribuições"
+                    },
+                    "403": {
+                        "description": "Sem acesso a este processo"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Atribuição de Processos"
+                ],
+                "summary": "Atribuir o processo a um técnico (ou pedir a atribuição)",
+                "description": "O administrador atribui directamente e a atribuição entra em vigor de imediato. O técnico que criou o processo cria um pedido, que fica pendente até um administrador o aprovar — e que, até lá, NÃO dá acesso.",
+                "operationId": "069053f35fb03574d4ead21c2ba696f0",
+                "parameters": [
+                    {
+                        "name": "quotationRequest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "Técnico a atribuir",
+                                        "type": "integer"
+                                    },
+                                    "reason": {
+                                        "description": "Justificação. Obrigatória quando quem pede não é administrador.",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Atribuído (admin) ou pedido criado (técnico)"
+                    },
+                    "403": {
+                        "description": "Só o criador do processo pode pedir atribuições"
+                    },
+                    "409": {
+                        "description": "Já existe um pedido pendente ou uma atribuição em vigor"
+                    },
+                    "422": {
+                        "description": "Alvo inválido"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/quotation-requests/{quotationRequest}/assignments/{assignment}": {
+            "delete": {
+                "tags": [
+                    "Atribuição de Processos"
+                ],
+                "summary": "Retirar uma atribuição ou cancelar um pedido",
+                "description": "Pode ser feito pelo administrador, pelo criador do processo, ou pelo próprio técnico atribuído.",
+                "operationId": "988957554816b801efe5fbf0acdf87d2",
+                "parameters": [
+                    {
+                        "name": "quotationRequest",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "assignment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Atribuição retirada"
+                    },
+                    "400": {
+                        "description": "Já não está activa"
+                    },
+                    "403": {
+                        "description": "Sem permissão"
+                    },
+                    "404": {
+                        "description": "Não pertence a este processo"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/quotation-requests": {
             "get": {
                 "tags": [
@@ -2462,6 +2751,77 @@
                 ]
             }
         },
+        "/api/quotation-requests/{id}/classification": {
+            "put": {
+                "tags": [
+                    "Cotações (Requests)"
+                ],
+                "summary": "Classificar o processo nas categorias do relatório de gestão",
+                "description": "Define a categoria de aquisição (Bens, Consultoria, Não Consultoria, Obras) e os campos que dela dependem. Ao contrário da edição normal, funciona em qualquer estado — é o caminho para classificar processos anteriores à introdução deste campo, que de outro modo ficariam para sempre em 'Sem categoria' no relatório.",
+                "operationId": "fca60063b039ca319631f2e34cde1f25",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "procurement_category"
+                                ],
+                                "properties": {
+                                    "procurement_category": {
+                                        "type": "string",
+                                        "enum": [
+                                            "bens",
+                                            "consultoria",
+                                            "nao_consultoria",
+                                            "obras"
+                                        ]
+                                    },
+                                    "execution_start_date": {
+                                        "description": "Consultoria: início do período de execução",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "execution_end_date": {
+                                        "description": "Consultoria: fim do período de execução",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "work_location": {
+                                        "description": "Obras: local da intervenção",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Processo classificado"
+                    },
+                    "403": {
+                        "description": "Sem acesso a este processo"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/quotation-requests/{id}/cancel": {
             "post": {
                 "tags": [
@@ -2766,6 +3126,125 @@
                 "responses": {
                     "201": {
                         "description": "Aquisição criada"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reports/management": {
+            "get": {
+                "tags": [
+                    "Relatórios"
+                ],
+                "summary": "Relatório de Gestão de Pequenas Aquisições",
+                "description": "Devolve o relatório estruturado conforme o documento oficial: dados gerais, resumo executivo por categoria (Bens, Serviços de Consultoria, Serviços de Não Consultoria, Obras), detalhe de processos por categoria e análise de desempenho. Devolve apenas dados — a geração de PDF, DOCX ou Excel é feita no frontend. Ao contrário de /api/reports/summary, que é global, este relatório respeita a visibilidade dos processos: um técnico vê os que iniciou e os que lhe foram atribuídos.",
+                "operationId": "b7b15aec5ea7213836a11492f7647184",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Tipo de período",
+                        "schema": {
+                            "type": "string",
+                            "default": "monthly",
+                            "enum": [
+                                "weekly",
+                                "monthly",
+                                "yearly"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Ano do período (ex.: 2026)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Mês, com period=monthly (1-12)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "week",
+                        "in": "query",
+                        "description": "Semana ISO, com period=weekly (1-53)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Intervalo livre; tem precedência sobre period",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "status[]",
+                        "in": "query",
+                        "description": "Um ou mais estados em simultâneo. Além dos estados do processo, aceita 'atrasado', que não é um estado guardado mas uma condição sobre a data de entrega prevista.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "draft",
+                                    "sent",
+                                    "in_progress",
+                                    "completed",
+                                    "cancelled",
+                                    "atrasado"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Relatório estruturado"
+                    },
+                    "422": {
+                        "description": "Período inválido"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reports/categories": {
+            "get": {
+                "tags": [
+                    "Relatórios"
+                ],
+                "summary": "Categorias de aquisição do relatório de gestão",
+                "description": "Lista as categorias com rótulo e descrição, para preencher o selector na criação de um processo.",
+                "operationId": "02a45dc60c22155d17ee2db74e349d6a",
+                "responses": {
+                    "200": {
+                        "description": "Lista de categorias"
                     }
                 },
                 "security": [
@@ -3641,6 +4120,47 @@
                 ]
             }
         },
+        "/api/users/technicians": {
+            "get": {
+                "tags": [
+                    "Usuários"
+                ],
+                "summary": "Listar técnicos elegíveis para atribuição de processos",
+                "description": "Devolve apenas id, nome e email dos técnicos activos. Existe porque a listagem completa de utilizadores é restrita a administradores, e um técnico precisa de escolher o colega a quem atribuir um processo.",
+                "operationId": "f60036f6316b8ff0980d24abbb073d06",
+                "responses": {
+                    "200": {
+                        "description": "Lista de técnicos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "email": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/user/permissions": {
             "get": {
                 "tags": [
@@ -3769,6 +4289,10 @@
             "description": "Histórico e Relatórios de Aquisições"
         },
         {
+            "name": "Pedidos de Atribuição",
+            "description": "Aprovação ou rejeição, pelo administrador, dos pedidos de atribuição de processos feitos pelos técnicos"
+        },
+        {
             "name": "Auditoria",
             "description": "Registo de auditoria do sistema (Apenas Admin)"
         },
@@ -3819,6 +4343,10 @@
         {
             "name": "Registo Público (Email)",
             "description": "Endpoints acessíveis via link de convite enviado por email (Token)"
+        },
+        {
+            "name": "Atribuição de Processos",
+            "description": "Atribuir um processo de aquisição a outro técnico. O criador do processo pede, o administrador aprova; o administrador pode também atribuir directamente."
         },
         {
             "name": "Cotações (Requests)",

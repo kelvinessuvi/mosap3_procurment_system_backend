@@ -42,6 +42,7 @@ class NegotiationFlowTest extends TestCase
         $id = $this->actingAs($this->admin, 'sanctum')->postJson('/api/quotation-requests', [
             'title' => 'Portáteis',
             'description' => 'Equipamento',
+            'procurement_category' => 'bens',
             'deadline' => now()->addDays(7)->toIso8601String(),
             'suppliers' => $supplierIds,
         ])->assertStatus(201)->json('id');

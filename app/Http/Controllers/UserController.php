@@ -178,6 +178,35 @@ class UserController extends Controller
 
     /**
      * @OA\Get(
+     *     path="/api/users/technicians",
+     *     summary="Listar técnicos elegíveis para atribuição de processos",
+     *     description="Devolve apenas id, nome e email dos técnicos activos. Existe porque a listagem completa de utilizadores é restrita a administradores, e um técnico precisa de escolher o colega a quem atribuir um processo.",
+     *     tags={"Usuários"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de técnicos",
+     *         @OA\JsonContent(type="array", @OA\Items(
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string")
+     *         ))
+     *     )
+     * )
+     */
+    public function technicians(Request $request)
+    {
+        $tecnicos = User::where('role', 'procurement_technician')
+            ->where('is_active', true)
+            ->whereKeyNot($request->user()->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        return response()->json($tecnicos);
+    }
+
+    /**
+     * @OA\Get(
      *     path="/api/user/permissions",
      *     summary="Obter menus e permissões do utilizador autenticado",
      *     description="Devolve a árvore de menus com as permissões do utilizador. Menus sem permissão são omitidos. Admin recebe todos os menus.",

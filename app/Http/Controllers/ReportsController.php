@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProcurementCategory;
+use App\Services\ManagementReportService;
+use App\Services\ReportPeriod;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * @OA\Tag(
@@ -12,6 +16,68 @@ use Illuminate\Http\Request;
  */
 class ReportsController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/reports/management",
+     *     summary="Relatório de Gestão de Pequenas Aquisições",
+     *     description="Devolve o relatório estruturado conforme o documento oficial: dados gerais, resumo executivo por categoria (Bens, Serviços de Consultoria, Serviços de Não Consultoria, Obras), detalhe de processos por categoria e análise de desempenho. Devolve apenas dados — a geração de PDF, DOCX ou Excel é feita no frontend. Ao contrário de /api/reports/summary, que é global, este relatório respeita a visibilidade dos processos: um técnico vê os que iniciou e os que lhe foram atribuídos.",
+     *     tags={"Relatórios"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="period", in="query", description="Tipo de período", @OA\Schema(type="string", enum={"weekly","monthly","yearly"}, default="monthly")),
+     *     @OA\Parameter(name="year", in="query", description="Ano do período (ex.: 2026)", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="month", in="query", description="Mês, com period=monthly (1-12)", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="week", in="query", description="Semana ISO, com period=weekly (1-53)", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="start_date", in="query", description="Intervalo livre; tem precedência sobre period", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="end_date", in="query", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(
+     *         name="status[]", in="query", description="Um ou mais estados em simultâneo. Além dos estados do processo, aceita 'atrasado', que não é um estado guardado mas uma condição sobre a data de entrega prevista.",
+     *         @OA\Schema(type="array", @OA\Items(type="string", enum={"draft","sent","in_progress","completed","cancelled","atrasado"}))
+     *     ),
+     *     @OA\Response(response=200, description="Relatório estruturado"),
+     *     @OA\Response(response=422, description="Período inválido")
+     * )
+     */
+    public function management(Request $request, ManagementReportService $service)
+    {
+        $validated = $request->validate([
+            'period' => ['nullable', Rule::in(['weekly', 'monthly', 'yearly'])],
+            'year' => 'nullable|integer|min:2000|max:2100',
+            'month' => 'nullable|integer|min:1|max:12',
+            'week' => 'nullable|integer|min:1|max:53',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'status' => 'nullable|array',
+            'status.*' => Rule::in(['draft', 'sent', 'in_progress', 'completed', 'cancelled', 'atrasado']),
+        ]);
+
+        $period = ReportPeriod::fromRequest($validated);
+
+        return response()->json(
+            $service->build($period, $request->user(), $validated['status'] ?? [])
+        );
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/reports/categories",
+     *     summary="Categorias de aquisição do relatório de gestão",
+     *     description="Lista as categorias com rótulo e descrição, para preencher o selector na criação de um processo.",
+     *     tags={"Relatórios"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Lista de categorias")
+     * )
+     */
+    public function categories()
+    {
+        return response()->json(
+            collect(ProcurementCategory::cases())->map(fn ($c) => [
+                'value' => $c->value,
+                'label' => $c->label(),
+                'description' => $c->description(),
+            ])
+        );
+    }
+
     /**
      * @OA\Get(
      *     path="/api/reports/summary",

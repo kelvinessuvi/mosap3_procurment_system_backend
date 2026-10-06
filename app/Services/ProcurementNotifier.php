@@ -69,16 +69,29 @@ class ProcurementNotifier
     }
 
     /**
-     * Criador do pedido + administradores activos, sem duplicados e sem o autor da acção.
+     * Criador do pedido + técnicos com atribuição em vigor + administradores
+     * activos, sem duplicados e sem o autor da acção.
+     *
+     * Os atribuídos entram aqui de propósito: quem vê o processo deve receber as
+     * notificações dele, senão passa a ter acesso a algo de que nunca é avisado.
      */
     public function recipients(QuotationRequest $quotationRequest, ?User $actor = null): Collection
     {
         $users = User::where('is_active', true)
             ->where(function ($q) use ($quotationRequest) {
                 $q->where('role', 'admin');
+
                 if ($quotationRequest->user_id) {
                     $q->orWhere('id', $quotationRequest->user_id);
                 }
+
+                $q->orWhereExists(function ($sub) use ($quotationRequest) {
+                    $sub->selectRaw('1')
+                        ->from('quotation_request_assignments as qra')
+                        ->whereColumn('qra.user_id', 'users.id')
+                        ->where('qra.quotation_request_id', $quotationRequest->id)
+                        ->where('qra.status', \App\Models\QuotationRequestAssignment::ACTIVE);
+                });
             })
             ->get();
 

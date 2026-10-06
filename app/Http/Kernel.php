@@ -68,5 +68,28 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\CheckRole::class,
         'menu' => \App\Http\Middleware\CheckMenuPermission::class,
+        'visible' => \App\Http\Middleware\EnsureRecordIsVisible::class,
+    ];
+
+    /**
+     * Prioridade explícita do middleware.
+     *
+     * É a lista por omissão do framework, com EnsureRecordIsVisible inserido
+     * depois de SubstituteBindings: o `visible` precisa de receber os modelos já
+     * resolvidos pelo route-model binding, não os ids em bruto.
+     *
+     * @var array<int, class-string>
+     */
+    protected $middlewarePriority = [
+        \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
+        \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        \App\Http\Middleware\EnsureRecordIsVisible::class,
+        \Illuminate\Auth\Middleware\Authorize::class,
     ];
 }

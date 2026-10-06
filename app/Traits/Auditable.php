@@ -32,6 +32,7 @@ trait Auditable
             'Acquisition' => 'Aquisição',
             'Category' => 'Categoria',
             'Product' => 'Produto',
+            'QuotationRequestAssignment' => 'Atribuição de Processo',
         ];
 
         $className = class_basename($model);

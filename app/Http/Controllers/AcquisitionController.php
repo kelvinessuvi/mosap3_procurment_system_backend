@@ -35,7 +35,9 @@ class AcquisitionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Acquisition::with(['supplier', 'user', 'quotationRequest'])->orderByDesc('id');
+        $query = Acquisition::with(['supplier', 'user', 'quotationRequest'])
+            ->visibleTo($request->user())
+            ->orderByDesc('id');
 
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
@@ -68,9 +70,10 @@ class AcquisitionController extends Controller
      *     @OA\Response(response=200, description="Histórico do fornecedor")
      * )
      */
-    public function supplierHistory($id)
+    public function supplierHistory(Request $request, $id)
     {
         $acquisitions = Acquisition::where('supplier_id', $id)
+            ->visibleTo($request->user())
             ->with(['quotationRequest'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
@@ -113,6 +116,9 @@ class AcquisitionController extends Controller
             ->join('quotation_responses', 'quotation_response_items.quotation_response_id', '=', 'quotation_responses.id')
             ->join('acquisitions', 'quotation_responses.id', '=', 'acquisitions.quotation_response_id')
             ->join('quotation_items', 'quotation_response_items.quotation_item_id', '=', 'quotation_items.id')
+            ->tap(fn ($q) => \App\Support\ProcessVisibility::applyToRaw(
+                $q, $request->user(), 'acquisitions.quotation_request_id'
+            ))
             // Left join products to get normalized names if available
             ->leftJoin('products', 'quotation_items.product_id', '=', 'products.id')
             ->whereBetween('acquisitions.created_at', [$startDate, $endDate])
