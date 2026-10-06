@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 /**
  * @OA\Tag(
@@ -39,8 +40,10 @@ class QuotationRequestController extends Controller
     {
         // ...
         // Add filters later
-        $query = QuotationRequest::query()->withCount('suppliers');
-        
+        $query = QuotationRequest::query()
+            ->visibleTo($request->user())
+            ->withCount('suppliers');
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -107,6 +110,12 @@ class QuotationRequestController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'activity_description' => 'nullable|string',
+            'procurement_category' => ['required', Rule::in(\App\Enums\ProcurementCategory::values())],
+            // Só se aplicam a algumas categorias (consultoria / obras), por isso
+            // nunca são obrigatórios — o relatório mostra "—" quando faltam.
+            'execution_start_date' => 'nullable|date',
+            'execution_end_date' => 'nullable|date|after_or_equal:execution_start_date',
+            'work_location' => 'nullable|string|max:255',
             'deadline' => 'required|date|after:now',
             'suppliers' => 'required|array|min:1',
             'suppliers.*' => 'exists:suppliers,id',
@@ -204,6 +213,10 @@ class QuotationRequestController extends Controller
             'title' => 'string|max:255',
             'description' => 'nullable|string',
             'activity_description' => 'nullable|string',
+            'procurement_category' => ['sometimes', Rule::in(\App\Enums\ProcurementCategory::values())],
+            'execution_start_date' => 'nullable|date',
+            'execution_end_date' => 'nullable|date|after_or_equal:execution_start_date',
+            'work_location' => 'nullable|string|max:255',
             'deadline' => 'date|after:now',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|mimes:pdf,doc,docx,jpg,png,xlsx,xls|max:10240',
@@ -380,6 +393,42 @@ class QuotationRequestController extends Controller
     }
 
     /**
+     * @OA\Put(
+     *     path="/api/quotation-requests/{id}/classification",
+     *     summary="Classificar o processo nas categorias do relatório de gestão",
+     *     description="Define a categoria de aquisição (Bens, Consultoria, Não Consultoria, Obras) e os campos que dela dependem. Ao contrário da edição normal, funciona em qualquer estado — é o caminho para classificar processos anteriores à introdução deste campo, que de outro modo ficariam para sempre em 'Sem categoria' no relatório.",
+     *     tags={"Cotações (Requests)"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"procurement_category"},
+     *             @OA\Property(property="procurement_category", type="string", enum={"bens","consultoria","nao_consultoria","obras"}),
+     *             @OA\Property(property="execution_start_date", type="string", format="date", description="Consultoria: início do período de execução"),
+     *             @OA\Property(property="execution_end_date", type="string", format="date", description="Consultoria: fim do período de execução"),
+     *             @OA\Property(property="work_location", type="string", description="Obras: local da intervenção")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Processo classificado"),
+     *     @OA\Response(response=403, description="Sem acesso a este processo")
+     * )
+     */
+    public function classify(Request $request, QuotationRequest $quotationRequest)
+    {
+        $validated = $request->validate([
+            'procurement_category' => ['required', Rule::in(\App\Enums\ProcurementCategory::values())],
+            'execution_start_date' => 'nullable|date',
+            'execution_end_date' => 'nullable|date|after_or_equal:execution_start_date',
+            'work_location' => 'nullable|string|max:255',
+        ]);
+
+        $quotationRequest->update($validated);
+
+        return response()->json($quotationRequest->fresh());
+    }
+
+    /**
      * @OA\Post(
      *     path="/api/quotation-requests/{id}/cancel",
      *     summary="Cancelar pedido de cotação",
@@ -391,7 +440,14 @@ class QuotationRequestController extends Controller
      */
     public function cancel(Request $request, QuotationRequest $quotationRequest)
     {
-        // Logic to cancel
+        // Sem esta guarda, cancelava-se um processo já concluído, e cancelar duas
+        // vezes gerava duas entradas de auditoria para o mesmo acto.
+        if (in_array($quotationRequest->status, ['completed', 'cancelled'], true)) {
+            return response()->json([
+                'message' => 'Esta cotação já está concluída ou cancelada.',
+            ], 400);
+        }
+
         $quotationRequest->update(['status' => 'cancelled']);
 
         AuditLog::log('Cancelamento de cotação', "Cotação #{$quotationRequest->reference_number} foi cancelada", [

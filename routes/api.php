@@ -97,12 +97,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Acquisitions & Reports
-    Route::middleware('menu:acquisitions,read')->group(function () {
+    Route::middleware(['menu:acquisitions,read', 'visible'])->group(function () {
         Route::get('acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'index']);
         Route::get('acquisitions/stats/products', [\App\Http\Controllers\AcquisitionController::class, 'productStats']);
         Route::post('acquisitions/{acquisition}/confirm-delivery', [\App\Http\Controllers\AcquisitionController::class, 'confirmDelivery'])->middleware('menu:acquisitions,write');
         Route::delete('acquisitions/{acquisition}', [\App\Http\Controllers\AcquisitionController::class, 'destroy'])->middleware('menu:acquisitions,write');
         Route::get('reports/summary', [\App\Http\Controllers\ReportsController::class, 'index']);
+        Route::get('reports/management', [\App\Http\Controllers\ReportsController::class, 'management']);
+        Route::get('reports/categories', [\App\Http\Controllers\ReportsController::class, 'categories']);
         Route::get('suppliers/{id}/acquisitions', [\App\Http\Controllers\AcquisitionController::class, 'supplierHistory']);
     });
 
@@ -119,13 +121,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Document routes (authenticated users can view documents)
-    Route::middleware('menu:documents,read')->group(function () {
+    Route::middleware(['menu:documents,read', 'visible'])->group(function () {
         Route::get('suppliers/{supplier}/documents/{documentType}', [\App\Http\Controllers\DocumentController::class, 'supplierDocument']);
         Route::get('quotation-responses/{quotationResponse}/document', [\App\Http\Controllers\DocumentController::class, 'proposalDocument']);
     });
 
     // Quotation Requests
-    Route::middleware('menu:quotation-requests,read')->group(function () {
+    Route::middleware(['menu:quotation-requests,read', 'visible'])->group(function () {
         Route::get('quotation-requests', [QuotationRequestController::class, 'index']);
         Route::get('quotation-requests/{quotationRequest}', [QuotationRequestController::class, 'show']);
         Route::post('quotation-requests', [QuotationRequestController::class, 'store'])->middleware('menu:quotation-requests,write');
@@ -133,6 +135,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('quotation-requests/{quotationRequest}', [QuotationRequestController::class, 'destroy'])->middleware('menu:quotation-requests,write');
         Route::post('quotation-requests/{quotationRequest}/send', [QuotationRequestController::class, 'send'])->middleware('menu:quotation-requests,write');
         Route::post('quotation-requests/{quotationRequest}/cancel', [QuotationRequestController::class, 'cancel'])->middleware('menu:quotation-requests,write');
+        Route::put('quotation-requests/{quotationRequest}/classification', [QuotationRequestController::class, 'classify'])->middleware('menu:quotation-requests,write');
+
+        // Atribuição do processo a outro técnico
+        Route::get('quotation-requests/{quotationRequest}/assignments', [\App\Http\Controllers\QuotationRequestAssignmentController::class, 'index']);
+        Route::post('quotation-requests/{quotationRequest}/assignments', [\App\Http\Controllers\QuotationRequestAssignmentController::class, 'store'])->middleware('menu:quotation-requests,write');
+        Route::delete('quotation-requests/{quotationRequest}/assignments/{assignment}', [\App\Http\Controllers\QuotationRequestAssignmentController::class, 'destroy'])->middleware('menu:quotation-requests,write');
+
+        // Técnicos elegíveis para atribuição (a listagem de utilizadores é admin-only)
+        Route::get('users/technicians', [UserController::class, 'technicians']);
     });
 
     // Admin only routes
@@ -146,7 +157,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->middleware('menu:categories,write');
 
         // Evaluation & Negotiation
-        Route::middleware('menu:supplier-evaluations,read')->group(function () {
+        Route::middleware(['menu:supplier-evaluations,read', 'visible'])->group(function () {
             Route::apiResource('quotation-responses', \App\Http\Controllers\QuotationResponseController::class)->only(['index', 'show']);
             Route::post('quotation-responses/{quotationResponse}/approve', [\App\Http\Controllers\QuotationResponseController::class, 'approve'])->middleware('menu:supplier-evaluations,write');
             Route::post('quotation-responses/{quotationResponse}/reject', [\App\Http\Controllers\QuotationResponseController::class, 'reject'])->middleware('menu:supplier-evaluations,write');
@@ -177,6 +188,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('deletion-requests/{deletionRequest}', [\App\Http\Controllers\DeletionRequestController::class, 'show']);
             Route::post('deletion-requests/{deletionRequest}/approve', [\App\Http\Controllers\DeletionRequestController::class, 'approve'])->middleware('menu:deletion-requests,write');
             Route::post('deletion-requests/{deletionRequest}/reject', [\App\Http\Controllers\DeletionRequestController::class, 'reject'])->middleware('menu:deletion-requests,write');
+        });
+
+        // Pedidos de Atribuição de Processos
+        Route::middleware('menu:assignment-requests,read')->group(function () {
+            Route::get('assignment-requests', [\App\Http\Controllers\AssignmentRequestController::class, 'index']);
+            Route::get('assignment-requests/{assignment}', [\App\Http\Controllers\AssignmentRequestController::class, 'show']);
+            Route::post('assignment-requests/{assignment}/approve', [\App\Http\Controllers\AssignmentRequestController::class, 'approve'])->middleware('menu:assignment-requests,write');
+            Route::post('assignment-requests/{assignment}/reject', [\App\Http\Controllers\AssignmentRequestController::class, 'reject'])->middleware('menu:assignment-requests,write');
         });
 
         // Menus Management

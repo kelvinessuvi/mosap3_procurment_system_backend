@@ -29,6 +29,7 @@ class QuotationLifecycleTest extends TestCase
         $quotationData = [
             'title' => 'Office Setup',
             'description' => 'Need desk and chairs',
+            'procurement_category' => 'bens',
             'deadline' => now()->addDays(7)->toIso8601String(),
             'items' => [
                 [

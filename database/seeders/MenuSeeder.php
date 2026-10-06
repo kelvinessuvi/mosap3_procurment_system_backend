@@ -22,6 +22,7 @@ class MenuSeeder extends Seeder
             ['name' => 'Notificações',       'slug' => 'notifications',       'icon' => 'notifications','order' => 10],
             ['name' => 'Registos de Auditoria', 'slug' => 'audit-logs',      'icon' => 'history',     'order' => 11],
             ['name' => 'Pedidos de Exclusão','slug' => 'deletion-requests',   'icon' => 'delete',      'order' => 12],
+            ['name' => 'Pedidos de Atribuição','slug' => 'assignment-requests','icon' => 'group_add',  'order' => 13],
         ];
 
         foreach ($menus as $menu) {

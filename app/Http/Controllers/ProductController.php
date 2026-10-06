@@ -82,7 +82,7 @@ class ProductController extends Controller
      *     @OA\Response(response=200, description="Dados de análise de preço")
      * )
      */
-    public function priceAnalytics($id)
+    public function priceAnalytics(Request $request, $id)
     {
         $product = Product::findOrFail($id);
 
@@ -93,6 +93,9 @@ class ProductController extends Controller
             ->join('quotation_responses', 'quotation_response_items.quotation_response_id', '=', 'quotation_responses.id')
             ->join('quotation_suppliers', 'quotation_responses.quotation_supplier_id', '=', 'quotation_suppliers.id')
             ->join('suppliers', 'quotation_suppliers.supplier_id', '=', 'suppliers.id')
+            ->tap(fn ($q) => \App\Support\ProcessVisibility::applyToRaw(
+                $q, $request->user(), 'quotation_suppliers.quotation_request_id'
+            ))
             ->where('quotation_items.product_id', $id)
             ->whereIn('quotation_responses.status', ['approved', 'completed', 'submitted']) // Consider valid offers
             ->select(
