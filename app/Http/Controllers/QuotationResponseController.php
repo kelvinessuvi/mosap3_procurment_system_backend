@@ -46,7 +46,10 @@ class QuotationResponseController extends Controller
      */
     public function index(Request $request)
     {
+        // Sem isto a listagem mostraria as propostas de todos os processos assim
+        // que a rota deixou de ser exclusiva do administrador.
         $query = QuotationResponse::with(['quotationSupplier.supplier', 'quotationSupplier.quotationRequest', 'acquisition'])
+            ->visibleTo($request->user())
             ->orderByDesc('id');
 
         if ($request->filled('status')) {
