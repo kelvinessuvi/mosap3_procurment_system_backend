@@ -146,6 +146,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('users/technicians', [UserController::class, 'technicians']);
     });
 
+    // Propostas: negociação e decisão.
+    //
+    // FORA de role:admin de propósito — o técnico que iniciou o processo (ou que
+    // lhe foi atribuído) acompanha e decide as propostas dele. Quem limita é a
+    // permissão de menu: 'read' só vê, 'write' negoceia, aprova e rejeita. O
+    // middleware `visible` garante que isto nunca passa dos processos do próprio.
+    Route::middleware(['menu:supplier-evaluations,read', 'visible'])->group(function () {
+        Route::apiResource('quotation-responses', \App\Http\Controllers\QuotationResponseController::class)->only(['index', 'show']);
+        Route::post('quotation-responses/{quotationResponse}/approve', [\App\Http\Controllers\QuotationResponseController::class, 'approve'])->middleware('menu:supplier-evaluations,write');
+        Route::post('quotation-responses/{quotationResponse}/reject', [\App\Http\Controllers\QuotationResponseController::class, 'reject'])->middleware('menu:supplier-evaluations,write');
+        Route::post('quotation-responses/{quotationResponse}/request-revision', [\App\Http\Controllers\QuotationResponseController::class, 'requestRevision'])->middleware('menu:supplier-evaluations,write');
+        Route::post('quotation-responses/{quotationResponse}/create-acquisition', [\App\Http\Controllers\QuotationResponseController::class, 'createAcquisition'])->middleware('menu:supplier-evaluations,write');
+    });
+
+    // Painel de controlo.
+    //
+    // FORA de role:admin: é a página onde se aterra depois do login e a sidebar
+    // mostra-a a quem tenha o menu 'dashboard'. Enquanto esteve restrita ao
+    // administrador, qualquer técnico com essa permissão entrava no sistema e
+    // apanhava 403 logo à porta. Os números e as listas são filtrados pelo que
+    // o utilizador pode ver.
+    Route::middleware('menu:dashboard,read')->group(function () {
+        Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
+    });
+
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
         Route::post('users/{user}/resend-verification', [\App\Http\Controllers\EmailVerificationController::class, 'resend']);
@@ -156,24 +181,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('categories/{category}', [CategoryController::class, 'update'])->middleware('menu:categories,write');
         Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->middleware('menu:categories,write');
 
-        // Evaluation & Negotiation
-        Route::middleware(['menu:supplier-evaluations,read', 'visible'])->group(function () {
-            Route::apiResource('quotation-responses', \App\Http\Controllers\QuotationResponseController::class)->only(['index', 'show']);
-            Route::post('quotation-responses/{quotationResponse}/approve', [\App\Http\Controllers\QuotationResponseController::class, 'approve'])->middleware('menu:supplier-evaluations,write');
-            Route::post('quotation-responses/{quotationResponse}/reject', [\App\Http\Controllers\QuotationResponseController::class, 'reject'])->middleware('menu:supplier-evaluations,write');
-            Route::post('quotation-responses/{quotationResponse}/request-revision', [\App\Http\Controllers\QuotationResponseController::class, 'requestRevision'])->middleware('menu:supplier-evaluations,write');
-            Route::post('quotation-responses/{quotationResponse}/create-acquisition', [\App\Http\Controllers\QuotationResponseController::class, 'createAcquisition'])->middleware('menu:supplier-evaluations,write');
-
-            // Supplier Evaluations
+        // Avaliações de fornecedores: são dados globais do fornecedor, não de um
+        // processo, por isso continuam restritas ao administrador.
+        Route::middleware('menu:supplier-evaluations,read')->group(function () {
             Route::get('supplier-evaluations', [\App\Http\Controllers\EvaluationController::class, 'index']);
             Route::get('suppliers/{id}/evaluation', [\App\Http\Controllers\EvaluationController::class, 'show']);
             Route::post('suppliers/{id}/evaluation/recalculate', [\App\Http\Controllers\EvaluationController::class, 'recalculate'])->middleware('menu:supplier-evaluations,write');
             Route::post('supplier-evaluations/recalculate-all', [\App\Http\Controllers\EvaluationController::class, 'recalculateAll'])->middleware('menu:supplier-evaluations,write');
-        });
-
-        // Dashboard
-        Route::middleware('menu:dashboard,read')->group(function () {
-            Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
         });
 
         // Audit Logs

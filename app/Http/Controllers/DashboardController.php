@@ -34,17 +34,27 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
+        $user = $request->user();
+
+        // O painel mostra o trabalho de quem o abre: o administrador vê tudo, o
+        // técnico vê os processos que iniciou e aqueles que lhe foram atribuídos.
+        // As listas abaixo são clicáveis — mostrar processos que o utilizador não
+        // pode abrir dava-lhe 403 ao clicar.
         return response()->json([
             'counts' => [
-                'active_quotations' => QuotationRequest::whereIn('status', ['sent', 'in_progress'])->count(),
-                'pending_reviews' => QuotationResponse::where('status', 'pending_review')->count(),
+                'active_quotations' => QuotationRequest::visibleTo($user)
+                    ->whereIn('status', ['sent', 'in_progress'])->count(),
+                'pending_reviews' => QuotationResponse::visibleTo($user)
+                    ->where('status', 'pending_review')->count(),
+                // Os fornecedores não pertencem a um processo: contagem global.
                 'active_suppliers' => Supplier::where('is_active', true)->count(),
-                'total_quotations' => QuotationRequest::count(),
+                'total_quotations' => QuotationRequest::visibleTo($user)->count(),
             ],
-            'recent_quotations' => QuotationRequest::latest()->take(5)->get(),
+            'recent_quotations' => QuotationRequest::visibleTo($user)->latest()->take(5)->get(),
             'pending_actions' => QuotationResponse::with(['quotationSupplier.supplier', 'quotationSupplier.quotationRequest'])
+                                    ->visibleTo($user)
                                     ->where('status', 'pending_review')
                                     ->take(5)
                                     ->get(),
